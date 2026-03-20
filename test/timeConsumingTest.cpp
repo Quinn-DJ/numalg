@@ -41,7 +41,11 @@ numalg::Matrix generate_matrix_A(std::size_t n) {
     return L * L.transpose();
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (!(argc == 1 || argc == 4)) {
+        std::cerr << "Usage: " << argv[0] << " [START_N] [END_N] [STEP]" << std::endl;
+        return 1;
+    }
     // the output file is ./output/time_consuming.csv
     // n, time for gaussSolve, time for PgaussSolve, time for choleskySolve, time for modifiedCholeskySolve
     // Ensure output directory exists before opening the file.
@@ -53,9 +57,14 @@ int main() {
     }
     outfile << "n, gaussSolve, PgaussSolve, choleskySolve, modifiedCholeskySolve\n";
 
+    // argv[0] is the program name
+    // argv[1] is the starting n, argv[2] is the ending n, argv[3] is the step
+    int start_n = argv[1] ? std::stoi(argv[1]) : 10;
+    int end_n = argv[2] ? std::stoi(argv[2]) : 500;
+    int step = argv[3] ? std::stoi(argv[3]) : 10;
     // 设置随机数种子
     srand(time(0));
-    for (int n = 10; n <= 500; n += 10) {
+    for (int n = start_n; n <= end_n; n += step) {
         std::cout << "Testing n = " << n << "..." << std::endl;
         numalg::Matrix A = generate_matrix_A(n);
         numalg::Matrix b = generate_vector_b(n);

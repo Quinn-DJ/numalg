@@ -55,6 +55,12 @@ make run-test
 make run-timeConsumingTest
 ```
 
+可通过 Make 变量传入起始值、结束值与步长（默认 10, 500, 10）：
+
+```bash
+make run-timeConsumingTest START_N=10 END_N=500 STEP=10
+```
+
 输出文件：
 - `./output/time_consuming.csv`
 
@@ -63,7 +69,7 @@ make run-timeConsumingTest
 在项目根目录下建立一个 Python 虚拟环境，安装 matplotlib，并运行绘图脚本：
 
 ```bash
-python3 -m venv .venv
+python -m venv .venv
 source .venv/bin/activate
 pip install matplotlib
 ```

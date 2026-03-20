@@ -7,39 +7,33 @@ OBJ_DIR := build/obj
 OBJ := $(SRC:src/%.cpp=$(OBJ_DIR)/%.o)
 
 TEST_SRC := test/test.cpp
-HW_SRC := test/homework02.cpp
 TIME_SRC := test/timeConsumingTest.cpp
 
 TEST_BIN := build/test
-HW_BIN := build/homework02
 TIME_BIN := build/timeConsumingTest
 
-.PHONY: all test homework02 timeConsumingTest run-test run-homework02 run-timeConsumingTest clean
+.PHONY: all test timeConsumingTest run-test run-timeConsumingTest clean
 
-all: test homework02 timeConsumingTest
+all: test timeConsumingTest
 
 test: $(TEST_BIN)
-
-homework02: $(HW_BIN)
 
 timeConsumingTest: $(TIME_BIN)
 
 run-test: $(TEST_BIN)
 	./$(TEST_BIN)
 
-run-homework02: $(HW_BIN)
-	./$(HW_BIN)
-
 run-timeConsumingTest: $(TIME_BIN)
-	./$(TIME_BIN)
+	./$(TIME_BIN) $(START_N) $(END_N) $(STEP)
+
+# Defaults for timeConsumingTest arguments (override via make START_N=... END_N=... STEP=...)
+START_N ?= 10
+END_N ?= 500
+STEP ?= 10
 
 $(TEST_BIN): $(OBJ) $(TEST_SRC)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(TEST_SRC) -o $@
-
-$(HW_BIN): $(OBJ) $(HW_SRC)
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(HW_SRC) -o $@
 
 $(TIME_BIN): $(OBJ) $(TIME_SRC)
 	@mkdir -p $(dir $@)
