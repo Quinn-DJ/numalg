@@ -1,0 +1,6 @@
+.venv/
+.vscode/
+build/
+.DS_Store
+output/
+test/homework02.cpp
