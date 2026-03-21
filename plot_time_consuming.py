@@ -9,7 +9,7 @@ def read_csv(path: Path):
     gauss = []
     pgauss = []
     cholesky = []
-    upper_cholesky = []
+    modified_cholesky = []
 
     with path.open(newline="") as f:
         reader = csv.DictReader(f, skipinitialspace=True)
@@ -18,9 +18,9 @@ def read_csv(path: Path):
             gauss.append(float(row["gaussSolve"].strip()))
             pgauss.append(float(row["PgaussSolve"].strip()))
             cholesky.append(float(row["choleskySolve"].strip()))
-            upper_cholesky.append(float(row["upperCholeskySolve"].strip()))
+            modified_cholesky.append(float(row["modifiedCholeskySolve"].strip()))
 
-    return n_values, gauss, pgauss, cholesky, upper_cholesky
+    return n_values, gauss, pgauss, cholesky, modified_cholesky
 
 
 def main() -> None:
@@ -28,13 +28,13 @@ def main() -> None:
     if not csv_path.exists():
         raise SystemExit(f"CSV not found: {csv_path}")
 
-    n_values, gauss, pgauss, cholesky, upper_cholesky = read_csv(csv_path)
+    n_values, gauss, pgauss, cholesky, modified_cholesky = read_csv(csv_path)
 
     plt.figure(figsize=(8, 5))
     plt.plot(n_values, gauss, label="gaussSolve", color="#1f77b4")
     plt.plot(n_values, pgauss, label="PgaussSolve", color="#ff7f0e")
     plt.plot(n_values, cholesky, label="choleskySolve", color="#2ca02c")
-    plt.plot(n_values, upper_cholesky, label="upperCholeskySolve", color="#9467bd")
+    plt.plot(n_values, modified_cholesky, label="modifiedCholeskySolve", color="#d62728")
 
     plt.xlabel("n")
     plt.ylabel("time (s)")

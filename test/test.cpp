@@ -84,19 +84,6 @@ int main() {
         std::cerr << "Error: " << e.what() << "\n";
     }
 
-    // 测试上三角平方根法 (A = U^T U)
-    try {
-        numalg::Matrix x_upper_cholesky = upperCholeskySolve(A_symm, b);
-        std::cout << "Solution with upper Cholesky:\n";
-        if (A_symm*x_upper_cholesky == b) {
-            std::cout << "Verification passed: A_symm * x_upper_cholesky == b\n";
-        } else {
-            std::cout << "Verification failed: A_symm * x_upper_cholesky != b\n";
-        }
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << "\n";
-    }
-
     // 测试改进的平方根法
     try {
         numalg::Matrix x_modified_cholesky = modifiedCholeskySolve(A_symm, b);

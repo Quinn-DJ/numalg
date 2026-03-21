@@ -9,8 +9,6 @@
 
 - include/: 头文件
 - src/: 算法实现
-  - solve.cpp: 上（下）三角矩阵求解
-  - gauss.cpp: 高斯消元（普通/列主元）、Cholesky 分解（下三角 A=LL^T / 上三角 A=U^T U）、改进平方根法
 - test/: 测试与作业程序
 - output/: 运行输出（CSV/图片）
 - plot_time_consuming.py: 绘制耗时折线图脚本
@@ -22,12 +20,12 @@
 - matrix.hpp: 定义了 `Matrix` 类，包含矩阵的基本属性与方法。
 - operations.hpp: 定义了矩阵的基本运算，如加法、乘法等。
 - solve.hpp: 最基本的上（下）三角矩阵求解函数声明。
-- gauss.hpp: 不同消元法的函数声明，以及 Cholesky 分解（含上三角形式）的函数声明。
+- gauss.hpp: 不同消元法的函数声明。
 
 ### `src/`
 
 - solve.cpp: 上（下）三角矩阵求解的实现。
-- gauss.cpp: 各种消元法及 Cholesky 分解的实现。
+- gauss.cpp: 各种消元法的实现。
 
 ## 编译说明
 

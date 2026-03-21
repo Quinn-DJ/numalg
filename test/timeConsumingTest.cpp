@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Failed to open output file: ./output/time_consuming.csv" << std::endl;
         return 1;
     }
-    outfile << "n, gaussSolve, PgaussSolve, choleskySolve, upperCholeskySolve\n";
+    outfile << "n, gaussSolve, PgaussSolve, choleskySolve, modifiedCholeskySolve\n";
 
     // argv[0] is the program name
     // argv[1] is the starting n, argv[2] is the ending n, argv[3] is the step
@@ -89,16 +89,10 @@ int main(int argc, char* argv[]) {
         outfile << ", " << time_cholesky;
 
         start = clock();
-        upperCholeskySolve(A, b);
+        modifiedCholeskySolve(A, b);
         end = clock();
-        double time_upper_cholesky = static_cast<double>(end - start) / CLOCKS_PER_SEC;
-        outfile << ", " << time_upper_cholesky;
-
-        // start = clock();
-        // modifiedCholeskySolve(A, b);
-        // end = clock();
-        // double time_modified_cholesky = static_cast<double>(end - start) / CLOCKS_PER_SEC;
-        // outfile << ", " << time_modified_cholesky;
+        double time_modified_cholesky = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+        outfile << ", " << time_modified_cholesky;
 
         outfile << "\n";
     }
