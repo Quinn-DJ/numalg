@@ -94,6 +94,41 @@ numalg::Matrix choleskySolve(const numalg::Matrix& A,
     return solve_upper_triangular(L.transpose(), y);
 }
 
+// 上三角平方根法 A = U^T U
+numalg::Matrix upperCholeskySolve(const numalg::Matrix& A,
+                                  const numalg::Matrix& b) {
+    if (A.lines() != A.rows()) {
+        throw std::invalid_argument("matrix A must be square");
+    }
+    if (A.lines() != b.lines()) {
+        throw std::invalid_argument("matrix A and b must have the same number of lines");
+    }
+
+    std::size_t n = A.lines();
+    numalg::Matrix U(n, n);  // 上三角矩阵
+    for (std::size_t j = 0; j < n; ++j) {
+        // 计算对角元素 U(j,j)
+        double sum = 0.0;
+        for (std::size_t k = 0; k < j; ++k) {
+            sum += U(k, j) * U(k, j);
+        }
+        U(j, j) = std::sqrt(A(j, j) - sum);
+
+        // 计算 U(j, i)，i > j，写入第 j 行，内存连续
+        for (std::size_t i = j + 1; i < n; ++i) {
+            double s = 0.0;
+            for (std::size_t k = 0; k < j; ++k) {
+                s += U(k, j) * U(k, i);
+            }
+            U(j, i) = (A(j, i) - s) / U(j, j);
+        }
+    }
+    // 求解 U^T y = b（下三角矩阵求解）
+    numalg::Matrix y = solve_lower_triangular(U.transpose(), b);
+    // 求解 U x = y（上三角矩阵求解）
+    return solve_upper_triangular(U, y);
+}
+
 // 改进的平方根法 let A = L D L^T
 numalg::Matrix modifiedCholeskySolve(const numalg::Matrix& A,
                                      const numalg::Matrix& b) {
