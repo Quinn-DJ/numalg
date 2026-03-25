@@ -59,12 +59,11 @@ int main() {
     // 生成一个对称正定矩阵 A_symm
     numalg::Matrix A_symm(10, 10);
     for (std::size_t i = 0; i < A_symm.lines(); ++i) {
-        for (std::size_t j = 0; j <= i; ++j) {
-            double value = rand() % 100 + 1;  // 确保正定
-            A_symm.at(i, j) = value;
-            A_symm.at(j, i) = value;  // 对称
+        A_symm.at(i, i) = 10;
+        if (i > 0) {
+            A_symm.at(i, i - 1) = 1;
+            A_symm.at(i - 1, i) = 1;
         }
-        A_symm.at(i, i) += 1000;  // 增加对角线元素，确保正定
     }
     A_symm.print();
 

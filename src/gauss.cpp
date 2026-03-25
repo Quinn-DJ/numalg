@@ -2,6 +2,9 @@
 #include "operations.hpp"
 #include "solve.hpp"
 
+#include <fstream>
+#include <filesystem>
+
 // 不选主元的高斯消元法
 numalg::Matrix gaussSolve(const numalg::Matrix& A,
                           const numalg::Matrix& b) {
@@ -72,20 +75,34 @@ numalg::Matrix choleskySolve(const numalg::Matrix& A,
     if (A.lines() != b.lines()) {
         throw std::invalid_argument("matrix A and b must have the same number of lines");
     }
-
+    
+    /*
+    for k = 1 : n
+        A(k, k) = sqrt(A(k, k))
+        A(k+1:n, k) = A(k+1:n, k) / A(k, k)
+        for j = k+1 : n
+            A(j:n, j) = A(j:n, j) - A(j:n, k) * A(j, k)
+        end
+    end
+    so L = A 的下三角部分，A = L L^T
+    */
     std::size_t n = A.lines();
-    numalg::Matrix L(n, n);  // 下三角矩阵
+    numalg::Matrix L = A;  // 下三角矩阵
+    for (std::size_t k = 0; k < n; ++k) {
+        L(k, k) = sqrt(L(k, k));
+        for (std::size_t i = k + 1; i < n; ++i) {
+            L(i, k) /= L(k, k);
+        }
+        for (std::size_t j = k + 1; j < n; ++j) {
+            for (std::size_t i = j; i < n; ++i) {
+                L(i, j) -= L(i, k) * L(j, k);
+            }
+        }
+    }
+    // L = A 的下三角部分
     for (std::size_t i = 0; i < n; ++i) {
-        for (std::size_t j = 0; j <= i; ++j) {
-            double sum = 0.0;
-            for (std::size_t k = 0; k < j; ++k) {
-                sum += L(i, k) * L(j, k);
-            }
-            if (i == j) {
-                L(i, j) = std::sqrt(A(i, j) - sum);
-            } else {
-                L(i, j) = (A(i, j) - sum) / L(j, j);
-            }
+        for (std::size_t j = i + 1; j < n; ++j) {
+            L(i, j) = 0.0;
         }
     }
     // 求解 Ly = b
@@ -104,29 +121,49 @@ numalg::Matrix modifiedCholeskySolve(const numalg::Matrix& A,
         throw std::invalid_argument("matrix A and b must have the same number of lines");
     }
 
+    /*
+    for j = 1 : n
+        for i = 1 : j-1
+            v(i) = A(j, i)A(i, i)
+        end
+        A(j, j) = A(j, j) - A(j, 1:j-1) * v(1:j-1)
+        A(j+1:n, j) = (A(j+1:n, j) - A(j+1:n, 1:j-1) * v(1:j-1)) / A(j, j)
+    end
+    so L 的严格下三角部分 = A 的严格下三角部分，L 的对角元素 = 1，D = A 的对角线部分，A = L D L^T
+    */
     std::size_t n = A.lines();
-    numalg::Matrix L(n, n);  // 下三角矩阵
-    numalg::Matrix D(n, n);  // 对角矩阵
-    for (std::size_t i = 0; i < n; ++i) {
-        for (std::size_t j = 0; j <= i; ++j) {
+    numalg::Matrix L = A;  // 下三角矩阵
+    for (std::size_t j = 0; j < n; ++j) {
+        numalg::Matrix v(n);
+        for (std::size_t i = 0; i < j; ++i) {
+            v(i) = L(j, i) * L(i, i);
+        }
+        for (std::size_t i = 0; i < j; ++i) {
+            L(j, j) -= L(j, i) * v(i);
+        }
+        for (std::size_t i = j + 1; i < n; ++i) {
             double sum = 0.0;
             for (std::size_t k = 0; k < j; ++k) {
-                sum += L(i, k) * D(k, k) * L(j, k);
+                sum += L(i, k) * v(k);
             }
-            if (i == j) {
-                D(i, i) = A(i, i) - sum;
-                L(i, j) = 1.0;
-            } else {
-                L(i, j) = (A(i, j) - sum) / D(j, j);
-            }
+            L(i, j) = (L(i, j) - sum) / L(j, j);
+        }
+    }
+    // L 的严格下三角部分 = A 的严格下三角部分，L 的对角元素 = 1，D = A 的对角线部分
+    numalg::Matrix D(n, n);
+    for (std::size_t i = 0; i < n; ++i) {
+        D(i, i) = L(i, i);
+        L(i, i) = 1.0;
+        for (std::size_t j = i + 1; j < n; ++j) {
+            L(i, j) = 0.0;
         }
     }
     // 求解 Ly = b
     numalg::Matrix y = solve_lower_triangular(L, b);
-    // 求解 (D L^T) x = y
-    // 由于 D 是对角矩阵，所以先让 y 除以 D 的对角元素，再求解 L^T x = y 以减少计算量
+    // 求解 Dz = y
     for (std::size_t i = 0; i < n; ++i) {
-        y(i, 0) /= D(i, i);
-    } 
+        y(i) /= D(i, i);
+    }
+    // 求解 L^T x = z
     return solve_upper_triangular(L.transpose(), y);
 }

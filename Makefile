@@ -8,23 +8,30 @@ OBJ := $(SRC:src/%.cpp=$(OBJ_DIR)/%.o)
 
 TEST_SRC := test/test.cpp
 TIME_SRC := test/timeConsumingTest.cpp
+HOMEWORK_SRC := test/homework03.cpp
 
 TEST_BIN := build/test
 TIME_BIN := build/timeConsumingTest
+HOMEWORK_BIN := build/homework03
 
-.PHONY: all test timeConsumingTest run-test run-timeConsumingTest clean
+.PHONY: all test timeConsumingTest homework run-test run-timeConsumingTest run-homework clean
 
-all: test timeConsumingTest
+all: test timeConsumingTest homework
 
 test: $(TEST_BIN)
 
 timeConsumingTest: $(TIME_BIN)
+
+homework: $(HOMEWORK_BIN)
 
 run-test: $(TEST_BIN)
 	./$(TEST_BIN)
 
 run-timeConsumingTest: $(TIME_BIN)
 	./$(TIME_BIN) $(START_N) $(END_N) $(STEP)
+
+run-homework: $(HOMEWORK_BIN)
+	./$(HOMEWORK_BIN)
 
 # Defaults for timeConsumingTest arguments (override via make START_N=... END_N=... STEP=...)
 START_N ?= 10
@@ -38,6 +45,10 @@ $(TEST_BIN): $(OBJ) $(TEST_SRC)
 $(TIME_BIN): $(OBJ) $(TIME_SRC)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(TIME_SRC) -o $@
+
+$(HOMEWORK_BIN): $(OBJ) $(HOMEWORK_SRC)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(HOMEWORK_SRC) -o $@
 
 $(OBJ_DIR)/%.o: src/%.cpp
 	@mkdir -p $(dir $@)

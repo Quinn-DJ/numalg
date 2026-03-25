@@ -10,7 +10,6 @@
 - include/: 头文件
 - src/: 算法实现
 - test/: 测试与作业程序
-- output/: 运行输出（CSV/图片）
 - plot_time_consuming.py: 绘制耗时折线图脚本
 
 ## 文件说明
@@ -62,15 +61,13 @@ make run-timeConsumingTest START_N=10 END_N=500 STEP=10
 ```
 
 输出文件：
-- `./output/time_consuming.csv`
+- 耗时测试结果会写入项目的输出目录
 
 ## Python 绘图
 
-在项目根目录下建立一个 Python 虚拟环境，安装 matplotlib，并运行绘图脚本：
+在项目根目录下建立 Python 环境，安装 matplotlib，并运行绘图脚本：
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
 pip install matplotlib
 ```
 
@@ -82,4 +79,4 @@ python plot_time_consuming.py
 
 输出文件：
 
-- `./output/time_consuming.png`
+- 绘图结果会写入项目的输出目录
