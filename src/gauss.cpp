@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <filesystem>
+#include <omp.h>
 
 // 不选主元的高斯消元法
 numalg::Matrix gaussSolve(const numalg::Matrix& A,
@@ -18,6 +19,7 @@ numalg::Matrix gaussSolve(const numalg::Matrix& A,
     numalg::Matrix U = A;  // 上三角矩阵
     numalg::Matrix y = b;  // 中间结果
     for (std::size_t k = 0; k < n; ++k) {
+#pragma omp parallel for
         for (std::size_t i = k + 1; i < n; ++i) {
             double factor = U(i, k) / U(k, k);
             for (std::size_t j = k; j < n; ++j) {
@@ -55,6 +57,7 @@ numalg::Matrix PgaussSolve(const numalg::Matrix& A,
             }
             std::swap(y(k, 0), y(max_row, 0));
         }
+#pragma omp parallel for
         for (std::size_t i = k + 1; i < n; ++i) {
             double factor = U(i, k) / U(k, k);
             for (std::size_t j = k; j < n; ++j) {
@@ -90,9 +93,11 @@ numalg::Matrix choleskySolve(const numalg::Matrix& A,
     numalg::Matrix L = A;  // 下三角矩阵
     for (std::size_t k = 0; k < n; ++k) {
         L(k, k) = sqrt(L(k, k));
+#pragma omp parallel for
         for (std::size_t i = k + 1; i < n; ++i) {
             L(i, k) /= L(k, k);
         }
+#pragma omp parallel for
         for (std::size_t j = k + 1; j < n; ++j) {
             for (std::size_t i = j; i < n; ++i) {
                 L(i, j) -= L(i, k) * L(j, k);
@@ -141,6 +146,7 @@ numalg::Matrix modifiedCholeskySolve(const numalg::Matrix& A,
         for (std::size_t i = 0; i < j; ++i) {
             L(j, j) -= L(j, i) * v(i);
         }
+#pragma omp parallel for
         for (std::size_t i = j + 1; i < n; ++i) {
             double sum = 0.0;
             for (std::size_t k = 0; k < j; ++k) {

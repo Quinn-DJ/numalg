@@ -1,5 +1,11 @@
 CXX ?= g++
 CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -Wpedantic
+OMP_PREFIX ?= $(shell brew --prefix libomp 2>/dev/null)
+OMP_INC ?= $(if $(OMP_PREFIX),$(OMP_PREFIX)/include,/opt/homebrew/opt/libomp/include)
+OMP_LIB ?= $(if $(OMP_PREFIX),$(OMP_PREFIX)/lib,/opt/homebrew/opt/libomp/lib)
+MAC_OMPFLAGS ?= -Xpreprocessor -fopenmp -I$(OMP_INC) -L$(OMP_LIB) -lomp
+LINUX_OMPFLAGS ?= -fopenmp
+OMPFLAGS ?= $(MAC_OMPFLAGS)
 INCLUDES := -Iinclude
 
 SRC := src/gauss.cpp src/solve.cpp
@@ -14,9 +20,15 @@ TEST_BIN := build/test
 TIME_BIN := build/timeConsumingTest
 HOMEWORK_BIN := build/homework03
 
-.PHONY: all test timeConsumingTest homework run-test run-timeConsumingTest run-homework clean
+.PHONY: all test timeConsumingTest homework run-test run-timeConsumingTest run-homework mac linux clean
 
 all: test timeConsumingTest homework
+
+mac: OMPFLAGS = $(MAC_OMPFLAGS)
+mac: all
+
+linux: OMPFLAGS = $(LINUX_OMPFLAGS)
+linux: all
 
 test: $(TEST_BIN)
 
@@ -40,19 +52,19 @@ STEP ?= 10
 
 $(TEST_BIN): $(OBJ) $(TEST_SRC)
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(TEST_SRC) -o $@
+	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $(INCLUDES) $(OBJ) $(TEST_SRC) -o $@
 
 $(TIME_BIN): $(OBJ) $(TIME_SRC)
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(TIME_SRC) -o $@
+	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $(INCLUDES) $(OBJ) $(TIME_SRC) -o $@
 
 $(HOMEWORK_BIN): $(OBJ) $(HOMEWORK_SRC)
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(HOMEWORK_SRC) -o $@
+	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $(INCLUDES) $(OBJ) $(HOMEWORK_SRC) -o $@
 
 $(OBJ_DIR)/%.o: src/%.cpp
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(OMPFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
 	rm -rf build
