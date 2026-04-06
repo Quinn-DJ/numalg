@@ -11,6 +11,7 @@ namespace numalg {
 class Matrix {
 public:
 
+    // Matrix constructors
     Matrix(std::size_t lines, std::size_t rows)
         : lines_(lines), rows_(rows), data_(lines * rows, 0.0) {}
 
@@ -21,6 +22,7 @@ public:
         }
     }
 
+    // Vector constructors (rows = 1 so we dont need to define a new class)
     Matrix(std::size_t lines)
         : lines_(lines), rows_((std::size_t)1), data_(lines, 0.0) {}
 
@@ -31,24 +33,27 @@ public:
         }
     }
 
-    std::size_t lines() const { return lines_; }
-    std::size_t rows() const { return rows_; }
-
-    double& operator()(std::size_t i, std::size_t j) { return data_[index(i, j)]; }
-    double operator()(std::size_t i, std::size_t j) const { return data_[index(i, j)]; }
-    double& operator()(std::size_t i) { return data_[index(i, 0)]; }
-    double operator()(std::size_t i) const { return data_[index(i, 0)]; }
-
+    // element access
+    double& operator()(std::size_t i, std::size_t j) {
+        return data_[index(i, j)];
+    }
+    double operator()(std::size_t i, std::size_t j) const {
+        return data_[index(i, j)];
+    }
+    double& operator()(std::size_t i) {
+        return data_[index(i, 0)];
+    }
+    double operator()(std::size_t i) const {
+        return data_[index(i, 0)];
+    }
     double& at(std::size_t i, std::size_t j) {
         check_bounds(i, j);
         return data_[index(i, j)];
     }
-
     double at(std::size_t i, std::size_t j) const {
         check_bounds(i, j);
         return data_[index(i, j)];
     }
-
     double& at(std::size_t i) {
         if (rows_ != 1) {
             throw std::invalid_argument("matrix is not a vector");
@@ -56,7 +61,6 @@ public:
         check_bounds(i, 0);
         return data_[i];
     }
-
     double at(std::size_t i) const {
         if (rows_ != 1) {
             throw std::invalid_argument("matrix is not a vector");
@@ -65,9 +69,94 @@ public:
         return data_[i];
     }
 
-    const std::vector<double>& data() const { return data_; }
+    // print the matrix
+    void print() const {
+        for (std::size_t i = 0; i < lines_; ++i) {
+            for (std::size_t j = 0; j < rows_; ++j) {
+                std::cout << (*this)(i, j) << " ";
+            }
+            std::cout << "\n";
+        }
+    }
 
-    // 下三角矩阵检测
+    // determinant (only for square matrices)
+    double det() const {
+        // to be done
+        throw std::logic_error("determinant not implemented");
+    }
+
+    // transpose
+    Matrix transpose() const {
+        Matrix result(rows_, lines_);
+        for (std::size_t i = 0; i < lines_; ++i) {
+            for (std::size_t j = 0; j < rows_; ++j) {
+                result(j, i) = (*this)(i, j);
+            }
+        }
+        return result;
+    }
+
+    // inverse (only for square matrices)
+    Matrix inverse() const {
+        // to be done
+        throw std::logic_error("inverse not implemented");
+    }
+
+    // 1-norm
+    double 1Norm() const {
+        double max_col_sum = 0.0;
+        for (std::size_t j = 0; j < rows_; ++j) {
+            double col_sum = 0.0;
+            for (std::size_t i = 0; i < lines_; ++i) {
+                col_sum += std::abs((*this)(i, j));
+            }
+            max_col_sum = std::max(max_col_sum, col_sum);
+        }
+        return max_col_sum;
+    }
+
+    // infinity-norm
+    double infNorm() const {
+        double max_row_sum = 0.0;
+        for (std::size_t i = 0; i < lines_; ++i) {
+            double row_sum = 0.0;
+            for (std::size_t j = 0; j < rows_; ++j) {
+                row_sum += std::abs((*this)(i, j));
+            }
+            max_row_sum = std::max(max_row_sum, row_sum);
+        }
+        return max_row_sum;
+    }
+
+    // 2-norm (aka spectral norm)
+    double 2Norm() const {
+        // complete later
+        throw std::logic_error("2-norm not implemented");
+    }
+
+
+
+private:
+
+    // meta information
+    std::size_t lines_;
+    std::size_t rows_;
+    std::vector<double> data_;
+
+    std::size_t lines() const { return lines_; }
+    std::size_t rows() const { return rows_; }
+    const std::vector<double>& data() const { return data_; }
+    std::size_t index(std::size_t i, std::size_t j) const {
+        return i * rows_ + j;
+    }
+
+    void check_bounds(std::size_t i, std::size_t j) const {
+        if (i >= lines_ || j >= rows_) {
+            throw std::out_of_range("matrix index out of range");
+        }
+    }
+
+    // check if the matrix is square and lower triangular
     bool is_lower_triangular() const {
         if (lines_ != rows_) {
             return false;
@@ -82,7 +171,6 @@ public:
         return true;
     }
 
-    // 上三角矩阵检测
     bool is_upper_triangular() const {
         if (lines_ != rows_) {
             return false;
@@ -95,41 +183,6 @@ public:
             }
         }
         return true;
-    }
-
-    void print() const {
-        for (std::size_t i = 0; i < lines_; ++i) {
-            for (std::size_t j = 0; j < rows_; ++j) {
-                std::cout << (*this)(i, j) << " ";
-            }
-            std::cout << "\n";
-        }
-    }
-
-    // transpose
-    Matrix transpose() const {
-        Matrix result(rows_, lines_);
-        for (std::size_t i = 0; i < lines_; ++i) {
-            for (std::size_t j = 0; j < rows_; ++j) {
-                result(j, i) = (*this)(i, j);
-            }
-        }
-        return result;
-    }
-
-private:
-    std::size_t lines_;
-    std::size_t rows_;
-    std::vector<double> data_;
-
-    std::size_t index(std::size_t i, std::size_t j) const {
-        return i * rows_ + j;
-    }
-
-    void check_bounds(std::size_t i, std::size_t j) const {
-        if (i >= lines_ || j >= rows_) {
-            throw std::out_of_range("matrix index out of range");
-        }
     }
 };
 
