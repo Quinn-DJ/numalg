@@ -2,8 +2,6 @@
 #include "operations.hpp"
 #include "solve.hpp"
 
-#include <fstream>
-#include <filesystem>
 
 // 不选主元的高斯消元法
 numalg::Matrix gaussSolve(const numalg::Matrix& A,
@@ -44,7 +42,7 @@ numalg::Matrix PgaussSolve(const numalg::Matrix& A,
     for (std::size_t k = 0; k < n; ++k) {
         std::size_t max_row = k;
         for (std::size_t i = k + 1; i < n; ++i) {
-            if (abs(U(i, k)) > abs(U(max_row, k))) {
+            if (std::abs(U(i, k)) > std::abs(U(max_row, k))) {
                 max_row = i;
             }
         }
@@ -166,4 +164,65 @@ numalg::Matrix modifiedCholeskySolve(const numalg::Matrix& A,
     }
     // 求解 L^T x = z
     return solve_upper_triangular(L.transpose(), y);
+}
+// 列主元 Gauss 消元法求矩阵逆
+// 对增广矩阵 [A | I] 做列主元消元，化为 [I | A^{-1}]
+numalg::Matrix gaussInverse(const numalg::Matrix& A) {
+    if (A.lines() != A.rows()) {
+        throw std::invalid_argument("matrix A must be square");
+    }
+    std::size_t n = A.lines();
+
+    // 构造增广矩阵 [A | I]，共 n 行 2n 列
+    numalg::Matrix aug(n, 2 * n);
+    for (std::size_t i = 0; i < n; ++i) {
+        for (std::size_t j = 0; j < n; ++j) {
+            aug(i, j) = A(i, j);
+        }
+        aug(i, n + i) = 1.0;
+    }
+
+    // 列主元消元
+    for (std::size_t k = 0; k < n; ++k) {
+        std::size_t max_row = k;
+        for (std::size_t i = k + 1; i < n; ++i) {
+            if (std::abs(aug(i, k)) > std::abs(aug(max_row, k))) {
+                max_row = i;
+            }
+        }
+        if (max_row != k) {
+            for (std::size_t j = 0; j < 2 * n; ++j) {
+                std::swap(aug(k, j), aug(max_row, j));
+            }
+        }
+        for (std::size_t i = k + 1; i < n; ++i) {
+            double factor = aug(i, k) / aug(k, k);
+            for (std::size_t j = k; j < 2 * n; ++j) {
+                aug(i, j) -= factor * aug(k, j);
+            }
+        }
+    }
+
+    // 回代
+    for (std::size_t i = n; i-- > 0;) {
+        double pivot = aug(i, i);
+        for (std::size_t j = 0; j < 2 * n; ++j) {
+            aug(i, j) /= pivot;
+        }
+        for (std::size_t k = 0; k < i; ++k) {
+            double factor = aug(k, i);
+            for (std::size_t j = 0; j < 2 * n; ++j) {
+                aug(k, j) -= factor * aug(i, j);
+            }
+        }
+    }
+
+    // 提取右半部分
+    numalg::Matrix inv(n, n);
+    for (std::size_t i = 0; i < n; ++i) {
+        for (std::size_t j = 0; j < n; ++j) {
+            inv(i, j) = aug(i, n + j);
+        }
+    }
+    return inv;
 }

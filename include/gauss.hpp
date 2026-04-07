@@ -2,6 +2,16 @@
 #define NUMALG_GAUSS_HPP
 
 #include "matrix.hpp"
+
+/**
+ * @brief 列主元 Gauss 消元法求矩阵逆
+ * 对 [A | I] 做列主元 Gauss 消元，得到 [I | A^{-1}]
+ *
+ * @param A 可逆方阵
+ * @return numalg::Matrix A 的逆矩阵
+ */
+numalg::Matrix gaussInverse(const numalg::Matrix& A);
+
 /**
  * @brief 不进行主元选择的高斯消元法
  * 
