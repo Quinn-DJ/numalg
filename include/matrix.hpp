@@ -103,7 +103,7 @@ public:
     }
 
     // 1-norm
-    double 1Norm() const {
+    double norm1() const {
         double max_col_sum = 0.0;
         for (std::size_t j = 0; j < rows_; ++j) {
             double col_sum = 0.0;
@@ -116,7 +116,7 @@ public:
     }
 
     // infinity-norm
-    double infNorm() const {
+    double normInf() const {
         double max_row_sum = 0.0;
         for (std::size_t i = 0; i < lines_; ++i) {
             double row_sum = 0.0;
@@ -129,23 +129,39 @@ public:
     }
 
     // 2-norm (aka spectral norm)
-    double 2Norm() const {
+    double norm2() const {
         // complete later
         throw std::logic_error("2-norm not implemented");
     }
 
 
 
+    std::size_t lines() const { return lines_; }
+    std::size_t rows() const { return rows_; }
+    const std::vector<double>& data() const { return data_; }
+
+    bool is_lower_triangular() const {
+        if (lines_ != rows_) return false;
+        for (std::size_t i = 0; i < lines_; ++i)
+            for (std::size_t j = i + 1; j < rows_; ++j)
+                if (std::abs((*this)(i, j)) > 1e-9) return false;
+        return true;
+    }
+
+    bool is_upper_triangular() const {
+        if (lines_ != rows_) return false;
+        for (std::size_t i = 1; i < lines_; ++i)
+            for (std::size_t j = 0; j < i; ++j)
+                if (std::abs((*this)(i, j)) > 1e-9) return false;
+        return true;
+    }
+
 private:
 
-    // meta information
     std::size_t lines_;
     std::size_t rows_;
     std::vector<double> data_;
 
-    std::size_t lines() const { return lines_; }
-    std::size_t rows() const { return rows_; }
-    const std::vector<double>& data() const { return data_; }
     std::size_t index(std::size_t i, std::size_t j) const {
         return i * rows_ + j;
     }
@@ -156,34 +172,7 @@ private:
         }
     }
 
-    // check if the matrix is square and lower triangular
-    bool is_lower_triangular() const {
-        if (lines_ != rows_) {
-            return false;
-        }
-        for (std::size_t i = 0; i < lines_; ++i) {
-            for (std::size_t j = i + 1; j < rows_; ++j) {
-                if (abs((*this)(i, j)) > 1e-9) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
 
-    bool is_upper_triangular() const {
-        if (lines_ != rows_) {
-            return false;
-        }
-        for (std::size_t i = 1; i < lines_; ++i) {
-            for (std::size_t j = 0; j < i; ++j) {
-                if (abs((*this)(i, j)) > 1e-9) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
 };
 
 }  // namespace numalg
