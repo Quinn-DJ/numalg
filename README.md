@@ -27,7 +27,7 @@
 
 - solve.cpp: 上（下）三角矩阵求解的实现。
 - gauss.cpp: 各种消元法的实现，以及列主元 Gauss 消元法求逆。
-- inverse_norm_estimate.cpp: Hager 优化法估计 ||B||_1（当 B = A^{-T} 时即 ||A^{-1}||_∞）。
+- inverse_norm_estimate.cpp: Hager 优化法估计 $\|B\|_1$（当 $B = A^{-T}$ 时即 $\|A^{-1}\|_\infty$）。
 
 ## 编译说明
 
