@@ -4,49 +4,49 @@
 #include "matrix.hpp"
 
 /**
- * @brief 列主元 Gauss 消元法求矩阵逆
- * 对 [A | I] 做列主元 Gauss 消元，得到 [I | A^{-1}]
+ * @brief Matrix inverse via Gaussian elimination with partial pivoting
+ * Perform partial-pivot Gauss elimination on [A | I] to obtain [I | A^{-1}]
  *
- * @param A 可逆方阵
- * @return numalg::Matrix A 的逆矩阵
+ * @param A invertible square matrix
+ * @return numalg::Matrix the inverse of A
  */
 numalg::Matrix gaussInverse(const numalg::Matrix& A);
 
 /**
- * @brief 不进行主元选择的高斯消元法
+ * @brief Gaussian elimination without pivoting
  * 
- * @param A 系数矩阵
- * @param b 常数项矩阵
+ * @param A coefficient matrix
+ * @param b constant terms
  * @return numalg::Matrix 
  */
 numalg::Matrix gaussSolve(const numalg::Matrix& A,
                           const numalg::Matrix& b);
 
 /**
- * @brief 列主元高斯消元法
+ * @brief Gaussian elimination with partial (column) pivoting
  * 
- * @param A 系数矩阵
- * @param b 常数项矩阵
+ * @param A coefficient matrix
+ * @param b constant terms
  * @return numalg::Matrix 
  */
 numalg::Matrix PgaussSolve(const numalg::Matrix& A,
                            const numalg::Matrix& b);
 
 /**
- * @brief 平方根法 aka Cholesky 分解
+ * @brief Cholesky decomposition: A = L L^T
  * 
- * @param A 系数矩阵，必须是对称正定矩阵
- * @param b 常数项矩阵
+ * @param A coefficient matrix (must be symmetric positive definite)
+ * @param b constant terms
  * @return numalg::Matrix 
  */
 numalg::Matrix choleskySolve(const numalg::Matrix& A,
                              const numalg::Matrix& b);
 
 /**
- * @brief 改进的平方根法
- * 避免了开方
- * @param A 系数矩阵，必须是对称正定矩阵
- * @param b 常数项矩阵
+ * @brief Modified Cholesky (LDL^T) decomposition
+ * Avoids square root operations
+ * @param A coefficient matrix (must be symmetric positive definite)
+ * @param b constant terms
  * @return numalg::Matrix
  */
 numalg::Matrix modifiedCholeskySolve(const numalg::Matrix& A,

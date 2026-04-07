@@ -4,7 +4,7 @@
 
 namespace numalg {
 
-// 向量无穷范数
+// Vector infinity norm: ||v||_\infty
 static double vec_norm_inf(const std::vector<double>& v) {
     double max_val = 0.0;
     for (auto x : v) {
@@ -14,7 +14,7 @@ static double vec_norm_inf(const std::vector<double>& v) {
     return max_val;
 }
 
-// 向量1范数
+// Vector 1-norm: ||v||_1
 static double vec_norm_1(const std::vector<double>& v) {
     double sum = 0.0;
     for (auto x : v) sum += std::abs(x);
@@ -45,7 +45,7 @@ static std::vector<double> matT_vec_mul(const Matrix& B, const std::vector<doubl
     return z;
 }
 
-// 点积 z^T * x
+// Dot product: a^T b
 static double dot(const std::vector<double>& a, const std::vector<double>& b) {
     double s = 0.0;
     for (std::size_t i = 0; i < a.size(); ++i) s += a[i] * b[i];
@@ -58,7 +58,7 @@ double estimate_inverse_norm_inf(const Matrix& B) {
         throw std::invalid_argument("B must be a square matrix");
     }
 
-    // x = e_1 (初始为单位向量)
+    // x = e_1 (initial guess)
     std::vector<double> x(n, 0.0);
     x[0] = 1.0;
 
@@ -76,10 +76,10 @@ double estimate_inverse_norm_inf(const Matrix& B) {
         std::vector<double> z = matT_vec_mul(B, v);
 
         if (vec_norm_inf(z) <= dot(z, x)) {
-            // 收敛：返回 ||w||_1
+            // Converged: return ||w||_1
             return vec_norm_1(w);
         } else {
-            // x = e_j，其中 |z_j| = ||z||_∞
+            // x = e_j where |z_j| = ||z||_\infty
             double z_inf = vec_norm_inf(z);
             std::fill(x.begin(), x.end(), 0.0);
             for (std::size_t j = 0; j < n; ++j) {

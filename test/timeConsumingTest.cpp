@@ -10,7 +10,7 @@
 #include "gauss.hpp"
 
 /**
- * @brief 随机生成 n 维列向量 b, 其元素是服从区间 [0, 1] 上的均匀分布的随机数
+ * @brief Generate a random n-vector b with elements uniformly distributed in [0, 1]
  * 
  * @return numalg::Matrix
  */
@@ -23,7 +23,8 @@ numalg::Matrix generate_vector_b(std::size_t n) {
 }
 
 /**
- * @brief 随机生成 n * n 矩阵 A, A = L L^T, 其中 L 是一个随机生成的下三角矩阵, L 的元素是服从区间 [1, 2] 上的均匀分布的随机数
+ * @brief Generate a random n*n SPD matrix A = L L^T, where L is a random upper triangular matrix
+ *   with elements uniformly distributed in [1, 2]
  * 
  * @return numalg::Matrix
  */
@@ -62,7 +63,7 @@ int main(int argc, char* argv[]) {
     int start_n = argv[1] ? std::stoi(argv[1]) : 10;
     int end_n = argv[2] ? std::stoi(argv[2]) : 500;
     int step = argv[3] ? std::stoi(argv[3]) : 10;
-    // 设置随机数种子
+    // Set random seed
     srand(time(0));
     for (int n = start_n; n <= end_n; n += step) {
         std::cout << "Testing n = " << n << "..." << std::endl;

@@ -5,8 +5,8 @@
 
 namespace numalg {
 
-// 估计 ||B||_1（当 B = A^{-T} 时，即 ||A^{-1}||_∞ 的估计值）
-// 基于优化法（Hager's method）
+// Estimate ||B||_1 (when B = A^{-T}, this gives ||A^{-1}||_\infty)
+// Based on Hager's method (optimization approach)
 double estimate_inverse_norm_inf(const Matrix& B);
 
 }  // namespace numalg

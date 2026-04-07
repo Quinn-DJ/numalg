@@ -25,9 +25,9 @@ int main() {
 
     numalg::Matrix x_1 = gaussSolve(A, b);
     numalg::Matrix x_2 = PgaussSolve(A, b);
-    std::cout << "Gauss 消元法 x_1:\n";
+    std::cout << "Gauss elimination x_1:\n";
     x_1.print();
-    std::cout << "Gauss 列主元消元法 x_2:\n";
+    std::cout << "Gauss elimination with pivoting x_2:\n";
     x_2.print();
     return 0;
 }

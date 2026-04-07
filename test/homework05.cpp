@@ -1,12 +1,13 @@
 /**
- * Homework 5 - 解的精度估计
+ * Homework 5 - Accuracy estimation of computed solutions
  *
- * 题目1: 估计 5~20 阶 Hilbert 矩阵的无穷范数条件数
- *   条件数 cond(A)_inf = ||A||_inf * ||A^{-1}||_inf
- *   其中 ||A^{-1}||_inf 通过 Hager 优化法估计
+ * Problem 1: Estimate the infinity-norm condition number of 5~20 order Hilbert matrices
+ *   cond(A)_\infty = ||A||_\infty * ||A^{-1}||_\infty
+ *   where ||A^{-1}||_\infty is estimated via Hager's method
  *
- * 题目2: 对特殊下三角矩阵 A_n（n=5~30），随机生成 x，计算 b=Ax，
- *   用列主元 Gauss 消元法求解，估计计算解的相对误差并与真实相对误差比较
+ * Problem 2: For special lower-triangular matrix A_n (n=5~30), generate random x,
+ *   compute b=Ax, solve with partial-pivot Gauss elimination,
+ *   estimate relative error of the computed solution and compare with true relative error
  */
 
 #include <iostream>
@@ -21,7 +22,7 @@
 #include "gauss.hpp"
 #include "inverse_norm_estimate.hpp"
 
-// 辅助：构造 Hilbert 矩阵 H(i,j) = 1/(i+j+1)
+// Helper: construct Hilbert matrix H(i,j) = 1/(i+j+1)
 numalg::Matrix hilbert(std::size_t n) {
     numalg::Matrix H(n, n);
     for (std::size_t i = 0; i < n; ++i) {
@@ -32,8 +33,8 @@ numalg::Matrix hilbert(std::size_t n) {
     return H;
 }
 
-// 辅助：构造题目2中的 A_n 矩阵
-// 对角线为1，第n列为1，下三角为-1，其余为0
+// Helper: construct A_n matrix from Problem 2
+// Diagonal = 1, column n = 1, strict lower triangle = -1, rest = 0
 numalg::Matrix make_An(std::size_t n) {
     numalg::Matrix A(n, n);
     for (std::size_t i = 0; i < n; ++i) {
@@ -51,7 +52,7 @@ numalg::Matrix make_An(std::size_t n) {
     return A;
 }
 
-// 辅助：随机生成 n 维向量，分量在 [-1, 1]
+// Helper: random n-vector with components in [-1, 1]
 numalg::Matrix random_vector(std::size_t n) {
     numalg::Matrix x(n, 1);
     for (std::size_t i = 0; i < n; ++i) {
@@ -60,7 +61,7 @@ numalg::Matrix random_vector(std::size_t n) {
     return x;
 }
 
-// 辅助：向量无穷范数
+// Helper: vector infinity norm
 double vec_inf_norm(const numalg::Matrix& v) {
     double mx = 0.0;
     for (std::size_t i = 0; i < v.lines(); ++i) {
@@ -74,20 +75,20 @@ int main() {
     std::cout << std::scientific << std::setprecision(6);
 
     // =============================================
-    // 题目1: Hilbert 矩阵的无穷范数条件数
+    // Problem 1: Infinity-norm condition number of Hilbert matrix
     // =============================================
-    // cond(A)_inf = ||A||_inf * ||A^{-1}||_inf
-    // 令 B = A^{-T}，则 estimate_inverse_norm_inf(B) = ||A^{-1}||_inf
-    std::cout << "===== 题目1: Hilbert 矩阵无穷范数条件数 =====\n";
+    // cond(A)_\infty = ||A||_\infty * ||A^{-1}||_\infty
+    // Let B = A^{-T}, then estimate_inverse_norm_inf(B) = ||A^{-1}||_\infty
+    std::cout << "===== Problem 1: Hilbert matrix condition number (inf-norm) =====\n";
     std::cout << "  n       ||H||_inf     ||H^{-1}||_inf  cond(H)_inf\n";
     for (std::size_t n = 5; n <= 20; ++n) {
         numalg::Matrix H = hilbert(n);
 
-        // ||H||_inf：直接用矩阵类的方法
+        // ||H||_\infty: use Matrix::normInf()
         double norm_H = H.normInf();
 
-        // ||H^{-1}||_inf：先求逆，再直接算无穷范数
-        // H^{-T} = (H^{-1})^T，由于 H 对称，H^{-1} 也对称
+        // ||H^{-1}||_\infty: compute inverse then take inf-norm
+        // H^{-T} = (H^{-1})^T; since H is symmetric, H^{-1} is also symmetric
         numalg::Matrix H_inv = gaussInverse(H);
         double norm_H_inv = H_inv.normInf();
 
@@ -101,46 +102,46 @@ int main() {
     std::cout << "\n";
 
     // =============================================
-    // 题目2: 特殊矩阵 A_n 的计算解精度估计
+    // Problem 2: Accuracy estimation for special matrix A_n
     // =============================================
-    // 对 n=5~30:
-    //   1. 随机生成 x
-    //   2. 计算 b = A_n * x
-    //   3. 用列主元 Gauss 消元法求解 x_tilde
-    //   4. 估计相对误差:
-    //      - v_hat = estimate_inverse_norm_inf(A_n^T)  (即 ||A^{-1}||_inf)
-    //      - mu = ||A||_inf
-    //      - gamma = ||r||_inf, r = b - A*x_tilde
-    //      - beta = ||b||_inf
-    //      - rho = v_hat * mu * gamma / beta  (估计的相对误差)
-    //   5. 真实相对误差: ||x - x_tilde||_inf / ||x||_inf
-    std::cout << "===== 题目2: A_n 计算解精度估计 =====\n";
-    std::cout << "   n   估计相对误差    真实相对误差\n";
+    // For n=5~30:
+    //   1. Generate random x
+    //   2. Compute b = A_n * x
+    //   3. Solve with partial-pivot Gauss elimination -> x_tilde
+    //   4. Estimate relative error:
+    //      - v_hat = estimate_inverse_norm_inf(A_n^T)  (i.e. ||A^{-1}||_\infty)
+    //      - mu = ||A||_\infty
+    //      - gamma = ||r||_\infty, r = b - A*x_tilde
+    //      - beta = ||b||_\infty
+    //      - rho = v_hat * mu * gamma / beta  (estimated relative error)
+    //   5. True relative error: ||x - x_tilde||_\infty / ||x||_\infty
+    std::cout << "===== Problem 2: A_n computed solution accuracy =====\n";
+    std::cout << "   n   Est. rel. error  True rel. error\n";
     for (std::size_t n = 5; n <= 30; ++n) {
         numalg::Matrix A = make_An(n);
 
-        // 随机生成真实解 x
+        // Generate random true solution x
         numalg::Matrix x = random_vector(n);
 
-        // 计算 b = A * x
+        // Compute b = A * x
         numalg::Matrix b = A * x;
 
-        // 列主元 Gauss 消元法求解
+        // Solve with partial-pivot Gauss elimination
         numalg::Matrix x_tilde = PgaussSolve(A, b);
 
-        // 残差 r = b - A * x_tilde
+        // Residual r = b - A * x_tilde
         numalg::Matrix r = b - A * x_tilde;
 
-        // 各范数
+        // Various norms
         double v_hat = numalg::estimate_inverse_norm_inf(A.transpose());
         double mu = A.normInf();
         double gamma = vec_inf_norm(r);
         double beta = vec_inf_norm(b);
 
-        // 估计的相对误差
+        // Estimated relative error
         double rho = (beta != 0.0) ? v_hat * mu * gamma / beta : 0.0;
 
-        // 真实相对误差
+        // True relative error
         double err = vec_inf_norm(x - x_tilde) / vec_inf_norm(x);
 
         std::cout << "  " << std::setw(2) << n << "   "

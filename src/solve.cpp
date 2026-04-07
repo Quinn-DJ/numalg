@@ -1,7 +1,7 @@
 #include "matrix.hpp"
 #include "operations.hpp"
 
-// 下三角矩阵求解
+// Forward substitution: solve Lx = b where L is lower triangular
 numalg::Matrix solve_lower_triangular(const numalg::Matrix& L,
                                       const numalg::Matrix& b) {
     if (L.is_lower_triangular() == false) {
@@ -18,7 +18,7 @@ numalg::Matrix solve_lower_triangular(const numalg::Matrix& L,
     return x;
 }
 
-// 上三角矩阵求解
+// Back substitution: solve Ux = b where U is upper triangular
 numalg::Matrix solve_upper_triangular(const numalg::Matrix& U,
                                       const numalg::Matrix& b) {
     if (U.is_upper_triangular() == false) {

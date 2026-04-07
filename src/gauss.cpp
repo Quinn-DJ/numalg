@@ -3,7 +3,7 @@
 #include "solve.hpp"
 
 
-// 不选主元的高斯消元法
+// Gaussian elimination without pivoting
 numalg::Matrix gaussSolve(const numalg::Matrix& A,
                           const numalg::Matrix& b) {
     if (A.lines() != A.rows()) {
@@ -13,8 +13,8 @@ numalg::Matrix gaussSolve(const numalg::Matrix& A,
         throw std::invalid_argument("matrix A and b must have the same number of lines");
     }
     std::size_t n = A.lines();
-    numalg::Matrix U = A;  // 上三角矩阵
-    numalg::Matrix y = b;  // 中间结果
+    numalg::Matrix U = A;  // upper triangular matrix
+    numalg::Matrix y = b;  // intermediate result
     for (std::size_t k = 0; k < n; ++k) {
         for (std::size_t i = k + 1; i < n; ++i) {
             double factor = U(i, k) / U(k, k);
@@ -27,7 +27,7 @@ numalg::Matrix gaussSolve(const numalg::Matrix& A,
     return solve_upper_triangular(U, y);
 }
 
-// 列主元的高斯消元法
+// Gaussian elimination with partial (column) pivoting
 numalg::Matrix PgaussSolve(const numalg::Matrix& A,
                            const numalg::Matrix& b) {
     if (A.lines() != A.rows()) {
@@ -47,7 +47,7 @@ numalg::Matrix PgaussSolve(const numalg::Matrix& A,
             }
         }
         if (max_row != k) {
-            // 交换行
+            // swap rows
             for (std::size_t j = 0; j < n; ++j) {
                 std::swap(U(k, j), U(max_row, j));
             }
@@ -64,7 +64,7 @@ numalg::Matrix PgaussSolve(const numalg::Matrix& A,
     return solve_upper_triangular(U, y);
 }
 
-// 平方根法 aka Cholesky 分解
+// Cholesky decomposition: A = L L^T
 numalg::Matrix choleskySolve(const numalg::Matrix& A,
                              const numalg::Matrix& b) {
     if (A.lines() != A.rows()) {
@@ -82,10 +82,10 @@ numalg::Matrix choleskySolve(const numalg::Matrix& A,
             A(j:n, j) = A(j:n, j) - A(j:n, k) * A(j, k)
         end
     end
-    so L = A 的下三角部分，A = L L^T
+    so L = lower triangular part of A, A = L L^T
     */
     std::size_t n = A.lines();
-    numalg::Matrix L = A;  // 下三角矩阵
+    numalg::Matrix L = A;  // will become lower triangular matrix
     for (std::size_t k = 0; k < n; ++k) {
         L(k, k) = sqrt(L(k, k));
         for (std::size_t i = k + 1; i < n; ++i) {
@@ -97,19 +97,19 @@ numalg::Matrix choleskySolve(const numalg::Matrix& A,
             }
         }
     }
-    // L = A 的下三角部分
+    // Extract lower triangular part of L
     for (std::size_t i = 0; i < n; ++i) {
         for (std::size_t j = i + 1; j < n; ++j) {
             L(i, j) = 0.0;
         }
     }
-    // 求解 Ly = b
+    // Solve Ly = b
     numalg::Matrix y = solve_lower_triangular(L, b);
-    // 求解 L^T x = y
+    // Solve L^T x = y
     return solve_upper_triangular(L.transpose(), y);
 }
 
-// 改进的平方根法 let A = L D L^T
+// Modified Cholesky (LDL^T) decomposition: A = L D L^T
 numalg::Matrix modifiedCholeskySolve(const numalg::Matrix& A,
                                      const numalg::Matrix& b) {
     if (A.lines() != A.rows()) {
@@ -127,10 +127,10 @@ numalg::Matrix modifiedCholeskySolve(const numalg::Matrix& A,
         A(j, j) = A(j, j) - A(j, 1:j-1) * v(1:j-1)
         A(j+1:n, j) = (A(j+1:n, j) - A(j+1:n, 1:j-1) * v(1:j-1)) / A(j, j)
     end
-    so L 的严格下三角部分 = A 的严格下三角部分，L 的对角元素 = 1，D = A 的对角线部分，A = L D L^T
+    so strict lower part of L = strict lower part of A, diag(L) = 1, D = diag(A), A = L D L^T
     */
     std::size_t n = A.lines();
-    numalg::Matrix L = A;  // 下三角矩阵
+    numalg::Matrix L = A;  // will store L and D
     for (std::size_t j = 0; j < n; ++j) {
         numalg::Matrix v(n);
         for (std::size_t i = 0; i < j; ++i) {
@@ -147,7 +147,7 @@ numalg::Matrix modifiedCholeskySolve(const numalg::Matrix& A,
             L(i, j) = (L(i, j) - sum) / L(j, j);
         }
     }
-    // L 的严格下三角部分 = A 的严格下三角部分，L 的对角元素 = 1，D = A 的对角线部分
+    // Extract L (unit lower triangular) and D (diagonal)
     numalg::Matrix D(n, n);
     for (std::size_t i = 0; i < n; ++i) {
         D(i, i) = L(i, i);
@@ -156,24 +156,24 @@ numalg::Matrix modifiedCholeskySolve(const numalg::Matrix& A,
             L(i, j) = 0.0;
         }
     }
-    // 求解 Ly = b
+    // Solve Ly = b
     numalg::Matrix y = solve_lower_triangular(L, b);
-    // 求解 Dz = y
+    // Solve Dz = y
     for (std::size_t i = 0; i < n; ++i) {
         y(i) /= D(i, i);
     }
-    // 求解 L^T x = z
+    // Solve L^T x = z
     return solve_upper_triangular(L.transpose(), y);
 }
-// 列主元 Gauss 消元法求矩阵逆
-// 对增广矩阵 [A | I] 做列主元消元，化为 [I | A^{-1}]
+// Matrix inverse via Gaussian elimination with partial pivoting
+// Augmented matrix [A | I] -> [I | A^{-1}]
 numalg::Matrix gaussInverse(const numalg::Matrix& A) {
     if (A.lines() != A.rows()) {
         throw std::invalid_argument("matrix A must be square");
     }
     std::size_t n = A.lines();
 
-    // 构造增广矩阵 [A | I]，共 n 行 2n 列
+    // Build augmented matrix [A | I], n rows x 2n columns
     numalg::Matrix aug(n, 2 * n);
     for (std::size_t i = 0; i < n; ++i) {
         for (std::size_t j = 0; j < n; ++j) {
@@ -182,7 +182,7 @@ numalg::Matrix gaussInverse(const numalg::Matrix& A) {
         aug(i, n + i) = 1.0;
     }
 
-    // 列主元消元
+    // Forward elimination with partial pivoting
     for (std::size_t k = 0; k < n; ++k) {
         std::size_t max_row = k;
         for (std::size_t i = k + 1; i < n; ++i) {
@@ -203,7 +203,7 @@ numalg::Matrix gaussInverse(const numalg::Matrix& A) {
         }
     }
 
-    // 回代
+    // Back substitution
     for (std::size_t i = n; i-- > 0;) {
         double pivot = aug(i, i);
         for (std::size_t j = 0; j < 2 * n; ++j) {
@@ -217,7 +217,7 @@ numalg::Matrix gaussInverse(const numalg::Matrix& A) {
         }
     }
 
-    // 提取右半部分
+    // Extract inverse from the right half
     numalg::Matrix inv(n, n);
     for (std::size_t i = 0; i < n; ++i) {
         for (std::size_t j = 0; j < n; ++j) {
