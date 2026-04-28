@@ -226,11 +226,19 @@ void part3(std::ofstream& out) {
     numalg::Matrix x = qrLeastSquares(A, b);
 
     out << std::fixed << std::setprecision(6);
-    out << "Model: y = x_0 + a_1*x_1 + a_2*x_2 + ... + a_11*x_11\n";
+    out << "Model: y = x_0 + x_1*a_1 + x_2*a_2 + ... + x_11*a_11\n";
     out << "x_0 (intercept) = " << x(0, 0) << "\n";
-    for (int j = 1; j < 12; ++j) {
-        out << "a_" << j << " = " << x(j, 0) << "\n";
-    }
+    out << "x_1  (tax)        = " << x(1, 0) << "\n";
+    out << "x_2  (bathrooms)  = " << x(2, 0) << "\n";
+    out << "x_3  (lot_area)   = " << x(3, 0) << "\n";
+    out << "x_4  (living_area)= " << x(4, 0) << "\n";
+    out << "x_5  (garages)    = " << x(5, 0) << "\n";
+    out << "x_6  (rooms)      = " << x(6, 0) << "\n";
+    out << "x_7  (bedrooms)   = " << x(7, 0) << "\n";
+    out << "x_8  (age)        = " << x(8, 0) << "\n";
+    out << "x_9  (bldg_type)  = " << x(9, 0) << "\n";
+    out << "x_10 (floor_plan) = " << x(10, 0) << "\n";
+    out << "x_11 (fireplaces) = " << x(11, 0) << "\n";
 
     double residual = frobNorm(A * x - b);
     out << std::scientific << std::setprecision(6);
