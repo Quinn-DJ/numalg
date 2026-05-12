@@ -10,190 +10,127 @@
 #include "gauss.hpp"
 #include "iterative.hpp"
 
-// Infinity-norm of a vector
-double vecInfNorm(const numalg::Matrix& v) {
-    double d = 0.0;
-    for (std::size_t i = 0; i < v.lines(); ++i)
-        d = std::max(d, std::abs(v(i)));
-    return d;
+// Exact solution of the BVP: y(x) = (1-a)/(1-e^{-1/eps}) * (1 - e^{-x/eps}) + a*x
+double exactSolution(double x, double eps, double a) {
+    double coeff = (1.0 - a) / (1.0 - std::exp(-1.0 / eps));
+    return coeff * (1.0 - std::exp(-x / eps)) + a * x;
 }
 
-// Print iteration result summary
-void printResult(std::ofstream& out, const std::string& method,
-                 const numalg::IterResult& r, const numalg::Matrix& x_exact) {
-    out << "  " << method << ":\n";
-    out << "    Converged:  " << (r.converged ? "Yes" : "No") << "\n";
-    out << "    Iterations: " << r.iterations << "\n";
-    if (x_exact.lines() > 0) {
-        double err = vecInfNorm(r.x - x_exact);
-        out << "    ||x - x*||_inf: " << std::scientific << err << "\n";
+// Build the (n-1)x(n-1) tridiagonal coefficient matrix A
+numalg::Matrix buildMatrix(std::size_t n, double eps) {
+    double h = 1.0 / n;
+    std::size_t m = n - 1;  // interior points
+    numalg::Matrix A(m, m);
+
+    double diag = -(2.0 * eps + h);
+    double upper = eps + h;
+    double lower = eps;
+
+    for (std::size_t i = 0; i < m; ++i) {
+        A(i, i) = diag;
+        if (i > 0) A(i, i - 1) = lower;
+        if (i < m - 1) A(i, i + 1) = upper;
     }
-    out << "\n";
+    return A;
 }
 
-// Print residual history (first few + last)
-void printHistory(std::ofstream& out, const std::string& method,
-                  const std::vector<double>& hist) {
-    out << "  " << method << " residual history:\n    ";
-    std::size_t show = std::min(hist.size(), std::size_t(10));
-    for (std::size_t i = 0; i < show; ++i)
-        out << std::scientific << hist[i] << " ";
-    if (hist.size() > 10)
-        out << "... " << hist.back();
-    out << "\n\n";
-}
+// Build the RHS vector b (n-1 elements)
+numalg::Matrix buildRHS(std::size_t n, double eps, double a) {
+    double h = 1.0 / n;
+    std::size_t m = n - 1;
+    numalg::Matrix b(m);
 
-// ============================================
-// Problem 1: 3x3 strictly diagonally dominant system
-//   [10  -1  -2] [x1]   [  7.2]
-//   [-1  11  -1] [x2] = [  7.3]
-//   [-2  -1  10] [x3]   [  8.4]
-// ============================================
-void prob1(std::ofstream& out) {
-    out << "========== Problem 1: 3x3 diagonally dominant system ==========\n";
-    out << "  A = [[10, -1, -2], [-1, 11, -1], [-2, -1, 10]]\n";
-    out << "  b = [7.2, 7.3, 8.4]^T\n";
-
-    numalg::Matrix A(3, 3, {10, -1, -2, -1, 11, -1, -2, -1, 10});
-    numalg::Matrix b(3, {7.2, 7.3, 8.4});
-    numalg::Matrix x_exact = PgaussSolve(A, b);
-
-    out << std::fixed << std::setprecision(6);
-    out << "  Exact: x = [" << x_exact(0) << ", " << x_exact(1) << ", " << x_exact(2) << "]^T\n\n";
-
-    auto r_jacobi = numalg::jacobiSolve(A, b);
-    auto r_gs     = numalg::gaussSeidelSolve(A, b);
-    auto r_sor    = numalg::sorSolve(A, b, 1.1);
-
-    printResult(out, "Jacobi", r_jacobi, x_exact);
-    printResult(out, "Gauss-Seidel", r_gs, x_exact);
-    printResult(out, "SOR (omega=1.1)", r_sor, x_exact);
-
-    // Compare convergence speed
-    out << "  Convergence speed (iterations to tol=1e-10):\n";
-    out << "    Jacobi:       " << r_jacobi.iterations << "\n";
-    out << "    Gauss-Seidel: " << r_gs.iterations << "\n";
-    out << "    SOR(1.1):     " << r_sor.iterations << "\n";
-    out << "    SOR(1.2):     " << numalg::sorSolve(A, b, 1.2).iterations << "\n";
-    out << "    SOR(1.5):     " << numalg::sorSolve(A, b, 1.5).iterations << "\n\n";
-
-    printHistory(out, "Jacobi", r_jacobi.residual_history);
-    printHistory(out, "Gauss-Seidel", r_gs.residual_history);
-}
-
-// ============================================
-// Problem 2: 5x5 strictly diagonally dominant system
-//   A is tridiagonal with 4 on diagonal, -1 on sub/super diagonals
-//   b = ones
-// ============================================
-void prob2(std::ofstream& out) {
-    out << "========== Problem 2: 5x5 tridiagonal system ==========\n";
-    out << "  A: diagonal=4, sub/super=-1\n";
-    out << "  b = [1, 1, 1, 1, 1]^T\n\n";
-
-    int n = 5;
-    numalg::Matrix A(n, n);
-    for (int i = 0; i < n; ++i) A(i, i) = 4;
-    for (int i = 0; i < n - 1; ++i) {
-        A(i, i + 1) = -1;
-        A(i + 1, i) = -1;
+    for (std::size_t i = 0; i < m; ++i) {
+        b(i) = a * h * h;
     }
-    numalg::Matrix b(n, {1, 1, 1, 1, 1});
+    // Boundary conditions
+    b(0) -= eps * 0.0;        // y(0) = 0, so no contribution
+    b(m - 1) -= (eps + h) * 1.0;  // y(1) = 1
 
-    // Exact solution via Gaussian elimination
-    numalg::Matrix x_exact = PgaussSolve(A, b);
-
-    auto r_jacobi = numalg::jacobiSolve(A, b);
-    auto r_gs     = numalg::gaussSeidelSolve(A, b);
-    auto r_sor    = numalg::sorSolve(A, b, 1.3);
-
-    printResult(out, "Jacobi", r_jacobi, x_exact);
-    printResult(out, "Gauss-Seidel", r_gs, x_exact);
-    printResult(out, "SOR (omega=1.3)", r_sor, x_exact);
-
-    out << "  Convergence speed:\n";
-    out << "    Jacobi:       " << r_jacobi.iterations << "\n";
-    out << "    Gauss-Seidel: " << r_gs.iterations << "\n";
-    out << "    SOR(1.0):     " << numalg::sorSolve(A, b, 1.0).iterations << "\n";
-    out << "    SOR(1.2):     " << numalg::sorSolve(A, b, 1.2).iterations << "\n";
-    out << "    SOR(1.3):     " << r_sor.iterations << "\n";
-    out << "    SOR(1.5):     " << numalg::sorSolve(A, b, 1.5).iterations << "\n";
-    out << "    SOR(1.7):     " << numalg::sorSolve(A, b, 1.7).iterations << "\n\n";
-
-    printHistory(out, "Jacobi", r_jacobi.residual_history);
-    printHistory(out, "Gauss-Seidel", r_gs.residual_history);
-    printHistory(out, "SOR(1.3)", r_sor.residual_history);
+    return b;
 }
 
-// ============================================
-// Problem 3: Large 100x100 diagonally dominant tridiagonal system
-//   Compare convergence speed of three methods at different scales
-// ============================================
-void prob3(std::ofstream& out) {
-    out << "========== Problem 3: 100x100 tridiagonal system ==========\n";
-    out << "  A: diagonal=10, sub/super=1 (strongly diagonally dominant)\n";
-    out << "  b = [1, 2, 3, ..., 100]^T\n\n";
-
-    int n = 100;
-    numalg::Matrix A(n, n);
-    for (int i = 0; i < n; ++i) A(i, i) = 10;
-    for (int i = 0; i < n - 1; ++i) {
-        A(i, i + 1) = 1;
-        A(i + 1, i) = 1;
+// Compute max error ||x_iter - x_exact||_inf
+double maxError(const numalg::Matrix& x_iter,
+                std::size_t n, double eps, double a) {
+    double err = 0.0;
+    for (std::size_t i = 0; i < n - 1; ++i) {
+        double x = (i + 1) / static_cast<double>(n);
+        double exact = exactSolution(x, eps, a);
+        err = std::max(err, std::abs(x_iter(i) - exact));
     }
-    numalg::Matrix b(n);
-    for (int i = 0; i < n; ++i) b(i) = i + 1;
+    return err;
+}
 
-    auto r_jacobi = numalg::jacobiSolve(A, b, 1e-12);
-    auto r_gs     = numalg::gaussSeidelSolve(A, b, 1e-12);
-    auto r_sor    = numalg::sorSolve(A, b, 1.2, 1e-12);
+// Solve and report for one (eps, a, n) configuration
+void solveAndReport(std::ofstream& out, double eps, double a, std::size_t n) {
+    out << "eps = " << std::scientific << std::setprecision(4) << eps << ", "
+        << "a = " << std::fixed << std::setprecision(2) << a << ", "
+        << "n = " << n << "\n\n";
+
+    numalg::Matrix A = buildMatrix(n, eps);
+    numalg::Matrix b = buildRHS(n, eps, a);
+
+    // Jacobi
+    auto r_jacobi = numalg::jacobiSolve(A, b, 1e-10, 100000);
+    // Gauss-Seidel
+    auto r_gs = numalg::gaussSeidelSolve(A, b, 1e-10, 100000);
+    // SOR with a few omega values
+    auto r_sor1 = numalg::sorSolve(A, b, 1.2, 1e-10, 100000);
+    auto r_sor2 = numalg::sorSolve(A, b, 1.5, 1e-10, 100000);
+    auto r_sor3 = numalg::sorSolve(A, b, 1.8, 1e-10, 100000);
+
+    double err_jacobi = maxError(r_jacobi.x, n, eps, a);
+    double err_gs     = maxError(r_gs.x, n, eps, a);
+    double err_sor1   = maxError(r_sor1.x, n, eps, a);
+    double err_sor2   = maxError(r_sor2.x, n, eps, a);
+    double err_sor3   = maxError(r_sor3.x, n, eps, a);
 
     out << std::scientific << std::setprecision(6);
-    printResult(out, "Jacobi", r_jacobi, numalg::Matrix(0, 0));
-    printResult(out, "Gauss-Seidel", r_gs, numalg::Matrix(0, 0));
-    printResult(out, "SOR (omega=1.2)", r_sor, numalg::Matrix(0, 0));
+    out << "  Method        Converged  Iterations   ||x - x*||_inf\n";
+    out << "  ----------    --------   ----------   ---------------\n";
+    out << "  Jacobi        " << (r_jacobi.converged ? "Yes" : "No ")
+        << "       " << std::setw(10) << r_jacobi.iterations
+        << "   " << err_jacobi << "\n";
+    out << "  Gauss-Seidel  " << (r_gs.converged ? "Yes" : "No ")
+        << "       " << std::setw(10) << r_gs.iterations
+        << "   " << err_gs << "\n";
+    out << "  SOR(1.2)      " << (r_sor1.converged ? "Yes" : "No ")
+        << "       " << std::setw(10) << r_sor1.iterations
+        << "   " << err_sor1 << "\n";
+    out << "  SOR(1.5)      " << (r_sor2.converged ? "Yes" : "No ")
+        << "       " << std::setw(10) << r_sor2.iterations
+        << "   " << err_sor2 << "\n";
+    out << "  SOR(1.8)      " << (r_sor3.converged ? "Yes" : "No ")
+        << "       " << std::setw(10) << r_sor3.iterations
+        << "   " << err_sor3 << "\n\n";
 
-    out << "  Convergence speed (tol=1e-12):\n";
-    out << "    Jacobi:       " << r_jacobi.iterations << "\n";
-    out << "    Gauss-Seidel: " << r_gs.iterations << "\n";
-    out << "    SOR (1.1):     " << numalg::sorSolve(A, b, 1.1, 1e-12).iterations << "\n";
-    out << "    SOR (1.2):     " << r_sor.iterations << "\n";
-    out << "    SOR (1.5):     " << numalg::sorSolve(A, b, 1.5, 1e-12).iterations << "\n\n";
+    // Print first few and last few solution values
+    out << std::fixed << std::setprecision(6);
+    out << "  Sample solutions (interior points):\n";
+    out << "  i       x_i         Jacobi      G-S         SOR(1.5)    Exact\n";
+    out << "  -----   --------    --------    --------    --------    --------\n";
 
-    printHistory(out, "Jacobi", r_jacobi.residual_history);
-    printHistory(out, "Gauss-Seidel", r_gs.residual_history);
-    printHistory(out, "SOR(1.2)", r_sor.residual_history);
-}
+    std::vector<int> indices;
+    if (n <= 20) {
+        for (std::size_t i = 0; i < n - 1; ++i) indices.push_back(i);
+    } else {
+        for (int i = 0; i < 5; ++i) indices.push_back(i);
+        for (int i = static_cast<int>(n) - 7; i < static_cast<int>(n) - 1; ++i)
+            indices.push_back(i);
+    }
 
-// ============================================
-// Problem 4: Non-diagonally dominant system
-//   Shows that iterative methods may diverge
-//   [1  2] [x1]   [3]
-//   [3  4] [x2] = [7]
-// ============================================
-void prob4(std::ofstream& out) {
-    out << "========== Problem 4: Non-diagonally dominant system ==========\n";
-    out << "  A = [[1, 2], [3, 4]] (not diagonally dominant)\n";
-    out << "  b = [3, 7]^T\n\n";
-
-    numalg::Matrix A(2, 2, {1, 2, 3, 4});
-    numalg::Matrix b(2, {3, 7});
-
-    auto r_jacobi = numalg::jacobiSolve(A, b, 1e-10, 1000);
-    auto r_gs     = numalg::gaussSeidelSolve(A, b, 1e-10, 1000);
-
-    out << "  Jacobi:\n";
-    out << "    Converged: " << (r_jacobi.converged ? "Yes" : "No") << "\n";
-    out << "    Iterations: " << r_jacobi.iterations << "\n";
-    if (r_jacobi.converged)
-        out << "    x = [" << r_jacobi.x(0) << ", " << r_jacobi.x(1) << "]\n";
-
-    out << "  Gauss-Seidel:\n";
-    out << "    Converged: " << (r_gs.converged ? "Yes" : "No") << "\n";
-    out << "    Iterations: " << r_gs.iterations << "\n";
-    if (r_gs.converged)
-        out << "    x = [" << r_gs.x(0) << ", " << r_gs.x(1) << "]\n";
-    out << "\n";
+    for (int idx : indices) {
+        double xi = (idx + 1) / static_cast<double>(n);
+        double ex = exactSolution(xi, eps, a);
+        out << "  " << std::setw(5) << idx << "   "
+            << std::setw(10) << xi << "  "
+            << std::setw(10) << r_jacobi.x(idx) << "  "
+            << std::setw(10) << r_gs.x(idx) << "  "
+            << std::setw(10) << r_sor2.x(idx) << "  "
+            << std::setw(10) << ex << "\n";
+    }
+    out << "\n" << std::string(60, '-') << "\n\n";
 }
 
 int main() {
@@ -204,10 +141,18 @@ int main() {
         return 1;
     }
 
-    prob1(out);
-    prob2(out);
-    prob3(out);
-    prob4(out);
+    out << "Week 10: Iterative methods for BVP\n";
+    out << "BVP: eps*y'' + y' = a, y(0)=0, y(1)=1\n";
+    out << std::string(60, '-') << "\n\n";
+
+    double a = 0.5;
+    std::size_t n = 100;
+
+    double eps_values[] = {1.0, 0.1, 0.01, 0.0001};
+
+    for (double eps : eps_values) {
+        solveAndReport(out, eps, a, n);
+    }
 
     std::cout << "Results written to ./output/homework10.txt" << std::endl;
     return 0;
