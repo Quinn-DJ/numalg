@@ -1,0 +1,38 @@
+#ifndef NUMALG_ITERATIVE_HPP
+#define NUMALG_ITERATIVE_HPP
+
+#include "matrix.hpp"
+#include <vector>
+
+namespace numalg {
+
+struct IterResult {
+    Matrix x;                // solution vector
+    std::size_t iterations;  // number of iterations performed
+    bool converged;          // whether convergence was achieved
+    std::vector<double> residual_history;  // ||x^{(k)} - x^{(k-1)}||_inf at each step
+};
+
+// Jacobi iteration: x^{(k+1)} = D^{-1} (b - (L+U) x^{(k)})
+// Convergence criterion: ||x^{(k+1)} - x^{(k)}||_inf < tol
+// Throws if any diagonal element of A is zero.
+IterResult jacobiSolve(const Matrix& A, const Matrix& b,
+                       double tol = 1e-10, std::size_t maxIter = 10000);
+
+// Gauss-Seidel iteration: uses updated components immediately
+// x_i^{(k+1)} = (b_i - sum_{j<i} a_{ij} x_j^{(k+1)} - sum_{j>i} a_{ij} x_j^{(k)}) / a_{ii}
+// Throws if any diagonal element of A is zero.
+IterResult gaussSeidelSolve(const Matrix& A, const Matrix& b,
+                            double tol = 1e-10, std::size_t maxIter = 10000);
+
+// SOR (Successive Over-Relaxation) iteration:
+// x_i^{(k+1)} = (1 - omega) * x_i^{(k)} + omega / a_{ii} * (b_i - sum_{j!=i} a_{ij} x_j)
+// omega in (0, 2) for convergence; omega=1 reduces to Gauss-Seidel
+// Throws if any diagonal element of A is zero.
+IterResult sorSolve(const Matrix& A, const Matrix& b,
+                    double omega = 1.5,
+                    double tol = 1e-10, std::size_t maxIter = 10000);
+
+}  // namespace numalg
+
+#endif  // NUMALG_ITERATIVE_HPP
