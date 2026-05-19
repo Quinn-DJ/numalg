@@ -33,6 +33,22 @@ IterResult sorSolve(const Matrix& A, const Matrix& b,
                     double omega = 1.5,
                     double tol = 1e-10, std::size_t maxIter = 10000);
 
+// CG (Conjugate Gradient) for symmetric positive definite systems
+// Implements Algorithm 5.3.1 (实用共轭梯度法)
+// Starting from x = 0, iterates until ||r||_2 <= tol * ||b||_2
+// residual_history stores ||r||_2 / ||b||_2 at each iteration
+IterResult cgSolve(const Matrix& A, const Matrix& b,
+                   double tol = 1e-10, std::size_t maxIter = 10000);
+
+// PCG (Preconditioned Conjugate Gradient) with Jacobi preconditioner
+// Implements Algorithm 5.4.1 (预优共轭梯度法)
+// M_diag[i] = diagonal entry of the preconditioner M
+// Solves Mz = r as z[i] = r[i] / M_diag[i] (Jacobi preconditioner)
+// residual_history stores ||r||_2 / ||b||_2 at each iteration
+IterResult pcgSolve(const Matrix& A, const Matrix& b,
+                    const Matrix& M_diag,
+                    double tol = 1e-10, std::size_t maxIter = 10000);
+
 }  // namespace numalg
 
 #endif  // NUMALG_ITERATIVE_HPP

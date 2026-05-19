@@ -13,6 +13,7 @@ HW3_SRC := test/homework03.cpp
 HW5_SRC := test/homework05.cpp
 HW8_SRC := test/homework08.cpp
 HW10_SRC := test/homework10.cpp
+HW11_SRC := test/homework11.cpp
 NORM_SRC := test/test_inverse_norm.cpp
 QR_SRC := test/test_qr.cpp
 
@@ -23,12 +24,13 @@ HW3_BIN := build/homework03
 HW5_BIN := build/homework05
 HW8_BIN := build/homework08
 HW10_BIN := build/homework10
+HW11_BIN := build/homework11
 NORM_BIN := build/test_inverse_norm
 QR_BIN := build/test_qr
 
-.PHONY: all test timeConsumingTest hw2 hw3 hw5 hw8 hw10 inverseNorm qr run-test run-timeConsumingTest run-hw2 run-hw3 run-hw5 run-hw8 run-hw10 run-inverseNorm run-qr clean
+.PHONY: all test timeConsumingTest hw2 hw3 hw5 hw8 hw10 hw11 inverseNorm qr run-test run-timeConsumingTest run-hw2 run-hw3 run-hw5 run-hw8 run-hw10 run-hw11 run-inverseNorm run-qr clean
 
-all: test timeConsumingTest hw2 hw3 hw5 hw8 hw10 inverseNorm qr
+all: test timeConsumingTest hw2 hw3 hw5 hw8 hw10 hw11 inverseNorm qr
 
 test: $(TEST_BIN)
 timeConsumingTest: $(TIME_BIN)
@@ -37,6 +39,7 @@ hw3: $(HW3_BIN)
 hw5: $(HW5_BIN)
 hw8: $(HW8_BIN)
 hw10: $(HW10_BIN)
+hw11: $(HW11_BIN)
 inverseNorm: $(NORM_BIN)
 qr: $(QR_BIN)
 
@@ -60,6 +63,9 @@ run-hw8: $(HW8_BIN)
 
 run-hw10: $(HW10_BIN)
 	./$(HW10_BIN)
+
+run-hw11: $(HW11_BIN)
+	./$(HW11_BIN)
 
 run-inverseNorm: $(NORM_BIN)
 	./$(NORM_BIN)
@@ -99,6 +105,10 @@ $(HW8_BIN): $(OBJ) $(HW8_SRC)
 $(HW10_BIN): $(OBJ) $(HW10_SRC)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(HW10_SRC) -o $@
+
+$(HW11_BIN): $(OBJ) $(HW11_SRC)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(HW11_SRC) -o $@
 
 $(NORM_BIN): $(OBJ) $(NORM_SRC)
 	@mkdir -p $(dir $@)
