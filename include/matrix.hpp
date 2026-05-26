@@ -12,6 +12,11 @@ class Matrix {
 public:
 
     // Matrix constructors
+    Matrix() : lines_(0), rows_(0), data_() {}
+
+    Matrix(std::size_t lines, std::size_t rows, double init_val)
+        : lines_(lines), rows_(rows), data_(lines * rows, init_val) {}
+
     Matrix(std::size_t lines, std::size_t rows)
         : lines_(lines), rows_(rows), data_(lines * rows, 0.0) {}
 

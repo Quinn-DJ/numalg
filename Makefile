@@ -2,7 +2,7 @@ CXX ?= g++
 CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -Wpedantic
 INCLUDES := -Iinclude
 
-SRC := src/gauss.cpp src/solve.cpp src/inverse_norm_estimate.cpp src/qr.cpp src/iterative.cpp
+SRC := src/gauss.cpp src/solve.cpp src/inverse_norm_estimate.cpp src/qr.cpp src/iterative.cpp src/power_method.cpp
 OBJ_DIR := build/obj
 OBJ := $(SRC:src/%.cpp=$(OBJ_DIR)/%.o)
 
@@ -14,6 +14,7 @@ HW5_SRC := test/homework05.cpp
 HW8_SRC := test/homework08.cpp
 HW10_SRC := test/homework10.cpp
 HW11_SRC := test/homework11.cpp
+HW12_SRC := test/homework12.cpp
 NORM_SRC := test/test_inverse_norm.cpp
 QR_SRC := test/test_qr.cpp
 
@@ -25,12 +26,13 @@ HW5_BIN := build/homework05
 HW8_BIN := build/homework08
 HW10_BIN := build/homework10
 HW11_BIN := build/homework11
+HW12_BIN := build/homework12
 NORM_BIN := build/test_inverse_norm
 QR_BIN := build/test_qr
 
 .PHONY: all test timeConsumingTest hw2 hw3 hw5 hw8 hw10 hw11 inverseNorm qr run-test run-timeConsumingTest run-hw2 run-hw3 run-hw5 run-hw8 run-hw10 run-hw11 run-inverseNorm run-qr clean
 
-all: test timeConsumingTest hw2 hw3 hw5 hw8 hw10 hw11 inverseNorm qr
+all: test timeConsumingTest hw2 hw3 hw5 hw8 hw10 hw11 hw12 inverseNorm qr
 
 test: $(TEST_BIN)
 timeConsumingTest: $(TIME_BIN)
@@ -40,6 +42,7 @@ hw5: $(HW5_BIN)
 hw8: $(HW8_BIN)
 hw10: $(HW10_BIN)
 hw11: $(HW11_BIN)
+hw12: $(HW12_BIN)
 inverseNorm: $(NORM_BIN)
 qr: $(QR_BIN)
 
@@ -66,6 +69,9 @@ run-hw10: $(HW10_BIN)
 
 run-hw11: $(HW11_BIN)
 	./$(HW11_BIN)
+
+run-hw12: $(HW12_BIN)
+	./$(HW12_BIN)
 
 run-inverseNorm: $(NORM_BIN)
 	./$(NORM_BIN)
@@ -109,6 +115,10 @@ $(HW10_BIN): $(OBJ) $(HW10_SRC)
 $(HW11_BIN): $(OBJ) $(HW11_SRC)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(HW11_SRC) -o $@
+
+$(HW12_BIN): $(OBJ) $(HW12_SRC)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(HW12_SRC) -o $@
 
 $(NORM_BIN): $(OBJ) $(NORM_SRC)
 	@mkdir -p $(dir $@)
