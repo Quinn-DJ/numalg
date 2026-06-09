@@ -2,7 +2,7 @@ CXX ?= g++
 CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -Wpedantic
 INCLUDES := -Iinclude
 
-SRC := src/gauss.cpp src/solve.cpp src/inverse_norm_estimate.cpp src/qr.cpp src/iterative.cpp src/power_method.cpp
+SRC := src/gauss.cpp src/solve.cpp src/inverse_norm_estimate.cpp src/qr.cpp src/iterative.cpp src/power_method.cpp src/hessenberg.cpp src/qr_algorithm.cpp src/sym_eigen.cpp
 OBJ_DIR := build/obj
 OBJ := $(SRC:src/%.cpp=$(OBJ_DIR)/%.o)
 
@@ -15,6 +15,9 @@ HW8_SRC := test/homework08.cpp
 HW10_SRC := test/homework10.cpp
 HW11_SRC := test/homework11.cpp
 HW12_SRC := test/homework12.cpp
+HW14_SRC := test/homework14.cpp
+HW14B_SRC := test/homework14b.cpp
+HWPROB_SRC := test/homework14_problems.cpp
 NORM_SRC := test/test_inverse_norm.cpp
 QR_SRC := test/test_qr.cpp
 
@@ -27,12 +30,15 @@ HW8_BIN := build/homework08
 HW10_BIN := build/homework10
 HW11_BIN := build/homework11
 HW12_BIN := build/homework12
+HW14_BIN := build/homework14
+HW14B_BIN := build/homework14b
+HWPROB_BIN := build/homework14_problems
 NORM_BIN := build/test_inverse_norm
 QR_BIN := build/test_qr
 
-.PHONY: all test timeConsumingTest hw2 hw3 hw5 hw8 hw10 hw11 inverseNorm qr run-test run-timeConsumingTest run-hw2 run-hw3 run-hw5 run-hw8 run-hw10 run-hw11 run-inverseNorm run-qr clean
+.PHONY: all test timeConsumingTest hw2 hw3 hw5 hw8 hw10 hw11 hw12 hw14 hw14b hw14-problems inverseNorm qr run-test run-timeConsumingTest run-hw2 run-hw3 run-hw5 run-hw8 run-hw10 run-hw11 run-hw12 run-hw14 run-hw14b run-hw14-problems run-inverseNorm run-qr clean
 
-all: test timeConsumingTest hw2 hw3 hw5 hw8 hw10 hw11 hw12 inverseNorm qr
+all: test timeConsumingTest hw2 hw3 hw5 hw8 hw10 hw11 hw12 hw14 hw14b hw14-problems inverseNorm qr
 
 test: $(TEST_BIN)
 timeConsumingTest: $(TIME_BIN)
@@ -43,6 +49,9 @@ hw8: $(HW8_BIN)
 hw10: $(HW10_BIN)
 hw11: $(HW11_BIN)
 hw12: $(HW12_BIN)
+hw14: $(HW14_BIN)
+hw14b: $(HW14B_BIN)
+hw14-problems: $(HWPROB_BIN)
 inverseNorm: $(NORM_BIN)
 qr: $(QR_BIN)
 
@@ -72,6 +81,13 @@ run-hw11: $(HW11_BIN)
 
 run-hw12: $(HW12_BIN)
 	./$(HW12_BIN)
+
+run-hw14: $(HW14_BIN)
+	./$(HW14_BIN)
+
+run-hw14b: $(HW14B_BIN)
+run-hw14-problems: $(HWPROB_BIN)
+	./$(HWPROB_BIN)
 
 run-inverseNorm: $(NORM_BIN)
 	./$(NORM_BIN)
@@ -119,6 +135,18 @@ $(HW11_BIN): $(OBJ) $(HW11_SRC)
 $(HW12_BIN): $(OBJ) $(HW12_SRC)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(HW12_SRC) -o $@
+
+$(HW14_BIN): $(OBJ) $(HW14_SRC)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(HW14_SRC) -o $@
+
+$(HW14B_BIN): $(OBJ) $(HW14B_SRC)
+
+$(HWPROB_BIN): $(OBJ) $(HWPROB_SRC)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(HWPROB_SRC) -o $@
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(HW14B_SRC) -o $@
 
 $(NORM_BIN): $(OBJ) $(NORM_SRC)
 	@mkdir -p $(dir $@)
