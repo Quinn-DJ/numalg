@@ -93,7 +93,7 @@ void runHomework() {
     out << "矩阵: diag(4), sub/super-diag(1)\n";
     out << "解析值: λ_k = 4 + 2cos(kπ/(n+1))\n\n";
 
-    out << "方法: 循环雅可比 (Cyclic Jacobi)\n";
+    out << "方法: 经典雅可比 (Classic Jacobi)\n";
     out << "收敛判据: off(A) ≤ tol · off(A₀),  tol = 1e-12\n\n";
 
     // ==================================================================
@@ -101,7 +101,7 @@ void runHomework() {
     // ==================================================================
     out << std::left;
     out << std::setw(10) << "n"
-        << std::setw(18) << "Sweeps"
+        << std::setw(18) << "Rotations"
         << std::setw(18) << "Time (ms)"
         << std::setw(22) << "Max |λ err|"
         << std::setw(22) << "Mean |λ err|"
@@ -120,7 +120,7 @@ void runHomework() {
         std::sort(exact.begin(), exact.end());
 
         auto tStart = std::chrono::high_resolution_clock::now();
-        auto result = numalg::cyclicJacobi(A, 1e-12, 50);
+        auto result = numalg::classicJacobi(A, 1e-12, n * n * 5);
         auto tEnd = std::chrono::high_resolution_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(tEnd - tStart).count();
 
@@ -191,7 +191,7 @@ void runHomework() {
         auto exact = analyticalEigenvalues(50);
         std::sort(exact.begin(), exact.end());
 
-        auto result = numalg::cyclicJacobi(A, 1e-12, 50);
+        auto result = numalg::classicJacobi(A, 1e-12, 12500);
         auto computed = result.eigenvalues_list;
         std::sort(computed.begin(), computed.end());
 
@@ -237,7 +237,7 @@ void runHomework() {
         double resid = residualError(A, result.Q, result.eigenvalues_list);
         out << "  残差 max||A q_j - λ_j q_j||_inf: " << std::scientific << resid << "\n";
 
-        out << "  Sweeps: " << result.sweeps << "\n";
+        out << "  Rotations: " << result.sweeps << "\n";
         out << "\n";
     }
 
@@ -262,7 +262,7 @@ void runHomework() {
             auto exact = analyticalEigenvalues(n);
             std::sort(exact.begin(), exact.end());
 
-            auto result = numalg::cyclicJacobi(A, 1e-12, 50);
+            auto result = numalg::classicJacobi(A, 1e-12, n * n * 5);
             auto computed = result.eigenvalues_list;
             std::sort(computed.begin(), computed.end());
 
@@ -294,7 +294,7 @@ void runHomework() {
         out << "============================================================\n\n";
 
         auto A = buildTridiagonal(6);
-        auto result = numalg::cyclicJacobi(A, 1e-14, 50);
+        auto result = numalg::classicJacobi(A, 1e-14, 200);
 
         out << "  特征值:\n";
         std::vector<double> evals = result.eigenvalues_list;
@@ -317,7 +317,7 @@ void runHomework() {
     out << "============================================================\n";
     out << "结果总结\n";
     out << "============================================================\n\n";
-    out << "  循环雅可比 (Cyclic Jacobi) 可稳定求出全部特征值和特征向量。\n";
+    out << "  经典雅可比 (Classic Jacobi) 可稳定求出全部特征值和特征向量。\n";
     out << "  - 特征值误差均值: ~1e-15 ~ 2e-15, 误差标准差 ~1e-15\n";
     out << "  - 正交性误差: 机器精度级别 (~1e-14)\n";
     out << "  - 特征向量残差: 机器精度级别 (~1e-15)\n";
