@@ -145,15 +145,11 @@ void runHomework() {
             sqSum += (errs[i] - meanErr) * (errs[i] - meanErr);
         double stdErr = std::sqrt(sqSum / static_cast<double>(n));
 
-        // 正交性误差 (仅对 n ≤ 60)
-        double orthoErr = -1.0;
-        if (n <= 60)
-            orthoErr = orthogonalityError(result.Q);
+        // 正交性误差 ||Q^T Q - I||_inf
+        double orthoErr = orthogonalityError(result.Q);
 
-        // 残差 ||A Q - Q Λ||_inf (仅对 n ≤ 60)
-        double resid = -1.0;
-        if (n <= 60)
-            resid = residualError(A, result.Q, result.eigenvalues_list);
+        // 残差 ||A Q - Q Λ||_inf
+        double resid = residualError(A, result.Q, result.eigenvalues_list);
 
         out << std::setw(10) << n
             << std::setw(18) << result.sweeps
@@ -162,17 +158,9 @@ void runHomework() {
             << std::setw(22) << std::scientific << meanErr
             << std::setw(22) << std::scientific << stdErr;
 
-        if (showQualityCols) {
-            if (orthoErr >= 0)
-                out << std::setw(22) << std::scientific << orthoErr;
-            else
-                out << std::setw(22) << "(skip)";
-
-            if (resid >= 0)
-                out << std::setw(22) << std::scientific << resid;
-            else
-                out << std::setw(22) << "(skip)";
-        }
+        if (showQualityCols)
+            out << std::setw(22) << std::scientific << orthoErr
+                << std::setw(22) << std::scientific << resid;
 
         out << "\n";
     }
@@ -320,7 +308,7 @@ void runHomework() {
     out << "  经典雅可比 (Classic Jacobi) 可稳定求出全部特征值和特征向量。\n";
     out << "  - 特征值误差均值: ~1e-15 ~ 2e-15, 误差标准差 ~1e-15\n";
     out << "  - 正交性误差: 机器精度级别 (~1e-14)\n";
-    out << "  - 特征向量残差: 机器精度级别 (~1e-15)\n";
+    out << "  - 特征向量残差: ~1e-11 ~ 1e-12\n";
     out << "\n";
 
     out.close();
