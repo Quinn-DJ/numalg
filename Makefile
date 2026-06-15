@@ -2,7 +2,7 @@ CXX ?= g++
 CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -Wpedantic
 INCLUDES := -Iinclude
 
-SRC := src/gauss.cpp src/solve.cpp src/inverse_norm_estimate.cpp src/qr.cpp src/iterative.cpp src/power_method.cpp src/hessenberg.cpp src/qr_algorithm.cpp src/sym_eigen.cpp
+SRC := src/gauss.cpp src/solve.cpp src/inverse_norm_estimate.cpp src/qr.cpp src/iterative.cpp src/power_method.cpp src/hessenberg.cpp src/qr_algorithm.cpp src/sym_eigen.cpp src/jacobi.cpp
 OBJ_DIR := build/obj
 OBJ := $(SRC:src/%.cpp=$(OBJ_DIR)/%.o)
 
@@ -20,6 +20,7 @@ HW14B_SRC := test/homework14b.cpp
 HWPROB_SRC := test/homework14_problems.cpp
 NORM_SRC := test/test_inverse_norm.cpp
 QR_SRC := test/test_qr.cpp
+HW15_SRC := test/homework15.cpp
 
 TEST_BIN := build/test
 TIME_BIN := build/timeConsumingTest
@@ -35,10 +36,11 @@ HW14B_BIN := build/homework14b
 HWPROB_BIN := build/homework14_problems
 NORM_BIN := build/test_inverse_norm
 QR_BIN := build/test_qr
+HW15_BIN := build/homework15
 
-.PHONY: all test timeConsumingTest hw2 hw3 hw5 hw8 hw10 hw11 hw12 hw14 hw14b hw14-problems inverseNorm qr run-test run-timeConsumingTest run-hw2 run-hw3 run-hw5 run-hw8 run-hw10 run-hw11 run-hw12 run-hw14 run-hw14b run-hw14-problems run-inverseNorm run-qr clean
+.PHONY: all test timeConsumingTest hw2 hw3 hw5 hw8 hw10 hw11 hw12 hw14 hw14b hw14-problems inverseNorm qr hw15 run-test run-timeConsumingTest run-hw2 run-hw3 run-hw5 run-hw8 run-hw10 run-hw11 run-hw12 run-hw14 run-hw14b run-hw14-problems run-inverseNorm run-qr run-hw15 clean
 
-all: test timeConsumingTest hw2 hw3 hw5 hw8 hw10 hw11 hw12 hw14 hw14b hw14-problems inverseNorm qr
+all: test timeConsumingTest hw2 hw3 hw5 hw8 hw10 hw11 hw12 hw14 hw14b hw14-problems inverseNorm qr hw15
 
 test: $(TEST_BIN)
 timeConsumingTest: $(TIME_BIN)
@@ -54,6 +56,7 @@ hw14b: $(HW14B_BIN)
 hw14-problems: $(HWPROB_BIN)
 inverseNorm: $(NORM_BIN)
 qr: $(QR_BIN)
+hw15: $(HW15_BIN)
 
 run-test: $(TEST_BIN)
 	./$(TEST_BIN)
@@ -94,6 +97,9 @@ run-inverseNorm: $(NORM_BIN)
 
 run-qr: $(QR_BIN)
 	./$(QR_BIN)
+
+run-hw15: $(HW15_BIN)
+	./$(HW15_BIN)
 
 # Defaults for timeConsumingTest arguments (override via make START_N=... END_N=... STEP=...)
 START_N ?= 10
@@ -155,6 +161,10 @@ $(NORM_BIN): $(OBJ) $(NORM_SRC)
 $(QR_BIN): $(OBJ) $(QR_SRC)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(QR_SRC) -o $@
+
+$(HW15_BIN): $(OBJ) $(HW15_SRC)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(OBJ) $(HW15_SRC) -o $@
 
 $(OBJ_DIR)/%.o: src/%.cpp
 	@mkdir -p $(dir $@)
