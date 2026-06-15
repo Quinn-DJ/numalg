@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <chrono>
+#include <numeric>
 
 #include "jacobi.hpp"
 #include "operations.hpp"
@@ -95,16 +96,22 @@ void runHomework() {
     out << "方法: 循环雅可比 (Cyclic Jacobi)\n";
     out << "收敛判据: off(A) ≤ tol · off(A₀),  tol = 1e-12\n\n";
 
-    // 表格头
+    // ==================================================================
+    // 表格: 每个 n 的收敛速度、耗时、误差统计
+    // ==================================================================
     out << std::left;
     out << std::setw(10) << "n"
         << std::setw(18) << "Sweeps"
         << std::setw(18) << "Time (ms)"
-        << std::setw(22) << "Max λ Error"
-        << std::setw(22) << "Ortho Error"
-        << std::setw(22) << "Residual"
-        << "\n";
-    out << std::string(112, '-') << "\n";
+        << std::setw(22) << "Max |λ err|"
+        << std::setw(22) << "Mean |λ err|"
+        << std::setw(22) << "Std |λ err|";
+    bool showQualityCols = true;
+    if (showQualityCols)
+        out << std::setw(22) << "Ortho Error"
+            << std::setw(22) << "Residual";
+    out << "\n";
+    out << std::string(150, '-') << "\n";
 
     // 测试 n = 50, 55, 60, ..., 100
     for (std::size_t n = 50; n <= 100; n += 5) {
@@ -121,12 +128,24 @@ void runHomework() {
         auto computed = result.eigenvalues_list;
         std::sort(computed.begin(), computed.end());
 
-        // 最大特征值误差
-        double maxEvalErr = 0.0;
+        // 误差向量
+        std::vector<double> errs(n);
         for (std::size_t i = 0; i < n; ++i)
-            maxEvalErr = std::max(maxEvalErr, std::abs(computed[i] - exact[i]));
+            errs[i] = std::abs(computed[i] - exact[i]);
 
-        // 正交性误差 (仅对 n ≤ 60 计算 Q 范数, 较大的 n 太慢)
+        // 最大误差
+        double maxEvalErr = *std::max_element(errs.begin(), errs.end());
+
+        // 均值
+        double meanErr = std::accumulate(errs.begin(), errs.end(), 0.0) / static_cast<double>(n);
+
+        // 标准差
+        double sqSum = 0.0;
+        for (std::size_t i = 0; i < n; ++i)
+            sqSum += (errs[i] - meanErr) * (errs[i] - meanErr);
+        double stdErr = std::sqrt(sqSum / static_cast<double>(n));
+
+        // 正交性误差 (仅对 n ≤ 60)
         double orthoErr = -1.0;
         if (n <= 60)
             orthoErr = orthogonalityError(result.Q);
@@ -139,27 +158,33 @@ void runHomework() {
         out << std::setw(10) << n
             << std::setw(18) << result.sweeps
             << std::setw(18) << elapsed
-            << std::setw(22) << std::scientific << maxEvalErr;
+            << std::setw(22) << std::scientific << maxEvalErr
+            << std::setw(22) << std::scientific << meanErr
+            << std::setw(22) << std::scientific << stdErr;
 
-        if (orthoErr >= 0)
-            out << std::setw(22) << std::scientific << orthoErr;
-        else
-            out << std::setw(22) << "(skip)";
+        if (showQualityCols) {
+            if (orthoErr >= 0)
+                out << std::setw(22) << std::scientific << orthoErr;
+            else
+                out << std::setw(22) << "(skip)";
 
-        if (resid >= 0)
-            out << std::setw(22) << std::scientific << resid;
-        else
-            out << std::setw(22) << "(skip)";
+            if (resid >= 0)
+                out << std::setw(22) << std::scientific << resid;
+            else
+                out << std::setw(22) << "(skip)";
+        }
 
         out << "\n";
     }
 
     out << "\n";
 
-    // 详细输出: n=50 的特征值对比
+    // ==================================================================
+    // n=50 特征值误差直方图 (按分布展示)
+    // ==================================================================
     {
         out << "============================================================\n";
-        out << "详细特征值 (n = 50)\n";
+        out << "特征值误差分布分析 (n = 50)\n";
         out << "============================================================\n\n";
 
         auto A = buildTridiagonal(50);
@@ -170,26 +195,40 @@ void runHomework() {
         auto computed = result.eigenvalues_list;
         std::sort(computed.begin(), computed.end());
 
-        // 打印前 10 个、中间 10 个和后 10 个
-        auto printBlock = [&](std::size_t start, std::size_t count) {
-            for (std::size_t i = start; i < start + count && i < 50; ++i) {
-                double err = std::abs(computed[i] - exact[i]);
-                out << "  λ[" << std::setw(3) << i << "] = " << std::setw(18) << computed[i]
-                    << "  exact " << std::setw(18) << exact[i]
-                    << "  err = " << std::scientific << err << "\n";
-            }
-        };
+        std::vector<double> errs(50);
+        for (std::size_t i = 0; i < 50; ++i)
+            errs[i] = std::abs(computed[i] - exact[i]);
 
-        out << "  前 10 个:\n";
-        printBlock(0, 10);
+        double meanErr = std::accumulate(errs.begin(), errs.end(), 0.0) / 50.0;
+        double sqSum = 0.0;
+        for (auto e : errs) sqSum += (e - meanErr) * (e - meanErr);
+        double stdErr = std::sqrt(sqSum / 50.0);
+        double maxErr = *std::max_element(errs.begin(), errs.end());
+        double minErr = *std::min_element(errs.begin(), errs.end());
+
+        out << "  统计概览:\n";
+        out << "    最大误差:  " << std::scientific << maxErr << "\n";
+        out << "    最小误差:  " << std::scientific << minErr << "\n";
+        out << "    平均误差:  " << std::scientific << meanErr << "\n";
+        out << "    标准差:    " << std::scientific << stdErr << "\n";
         out << "\n";
 
-        out << "  中间 10 个:\n";
-        printBlock(20, 10);
-        out << "\n";
-
-        out << "  后 10 个:\n";
-        printBlock(40, 10);
+        // 按误差量级分桶
+        out << "  误差量级分布:\n";
+        std::vector<int> buckets(5, 0);  // <1e-15, 1e-15~3e-15, 3e-15~1e-14, 1e-14~3e-14, >=3e-14
+        for (auto e : errs) {
+            if (e < 1e-15) buckets[0]++;
+            else if (e < 3e-15) buckets[1]++;
+            else if (e < 1e-14) buckets[2]++;
+            else if (e < 3e-14) buckets[3]++;
+            else buckets[4]++;
+        }
+        out << "    < 1e-15     : " << std::setw(4) << buckets[0] << " 个 (" << std::fixed << std::setprecision(1)
+            << 100.0 * buckets[0] / 50.0 << "%)\n";
+        out << "    1e-15~3e-15: " << std::setw(4) << buckets[1] << " 个 (" << 100.0 * buckets[1] / 50.0 << "%)\n";
+        out << "    3e-15~1e-14: " << std::setw(4) << buckets[2] << " 个 (" << 100.0 * buckets[2] / 50.0 << "%)\n";
+        out << "    1e-14~3e-14: " << std::setw(4) << buckets[3] << " 个 (" << 100.0 * buckets[3] / 50.0 << "%)\n";
+        out << "    >= 3e-14    : " << std::setw(4) << buckets[4] << " 个 (" << 100.0 * buckets[4] / 50.0 << "%)\n";
         out << "\n";
 
         double orthoErr = orthogonalityError(result.Q);
@@ -202,10 +241,56 @@ void runHomework() {
         out << "\n";
     }
 
-    // 小矩阵 (n=6) 展示特征向量
+    // ==================================================================
+    // 误差随 n 变化的趋势
+    // ==================================================================
     {
         out << "============================================================\n";
-        out << "特征向量示例 (n = 6, 仅显示部分)\n";
+        out << "误差随 n 变化的趋势\n";
+        out << "============================================================\n\n";
+
+        out << std::left;
+        out << std::setw(10) << "n"
+            << std::setw(22) << "Max |λ err|"
+            << std::setw(22) << "Mean |λ err|"
+            << std::setw(22) << "Std |λ err|"
+            << "\n";
+        out << std::string(76, '-') << "\n";
+
+        for (std::size_t n = 50; n <= 100; n += 5) {
+            auto A = buildTridiagonal(n);
+            auto exact = analyticalEigenvalues(n);
+            std::sort(exact.begin(), exact.end());
+
+            auto result = numalg::cyclicJacobi(A, 1e-12, 50);
+            auto computed = result.eigenvalues_list;
+            std::sort(computed.begin(), computed.end());
+
+            std::vector<double> errs(n);
+            for (std::size_t i = 0; i < n; ++i)
+                errs[i] = std::abs(computed[i] - exact[i]);
+
+            double maxErr = *std::max_element(errs.begin(), errs.end());
+            double meanErr = std::accumulate(errs.begin(), errs.end(), 0.0) / static_cast<double>(n);
+            double sqSum = 0.0;
+            for (auto e : errs) sqSum += (e - meanErr) * (e - meanErr);
+            double stdErr = std::sqrt(sqSum / static_cast<double>(n));
+
+            out << std::setw(10) << n
+                << std::setw(22) << std::scientific << maxErr
+                << std::setw(22) << std::scientific << meanErr
+                << std::setw(22) << std::scientific << stdErr
+                << "\n";
+        }
+        out << "\n";
+    }
+
+    // ==================================================================
+    // n=6 特征向量展示
+    // ==================================================================
+    {
+        out << "============================================================\n";
+        out << "特征向量示例 (n = 6)\n";
         out << "============================================================\n\n";
 
         auto A = buildTridiagonal(6);
@@ -233,9 +318,9 @@ void runHomework() {
     out << "结果总结\n";
     out << "============================================================\n\n";
     out << "  循环雅可比 (Cyclic Jacobi) 可稳定求出全部特征值和特征向量。\n";
-    out << "  - 特征值误差: 机器精度级别 (~1e-14 ~ 1e-12)\n";
-    out << "  - 正交性误差: 机器精度级别\n";
-    out << "  - 特征向量残差: 机器精度级别\n";
+    out << "  - 特征值误差均值: ~1e-15 ~ 2e-15, 误差标准差 ~1e-15\n";
+    out << "  - 正交性误差: 机器精度级别 (~1e-14)\n";
+    out << "  - 特征向量残差: 机器精度级别 (~1e-15)\n";
     out << "\n";
 
     out.close();
